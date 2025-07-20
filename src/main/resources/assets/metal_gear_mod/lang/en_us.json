@@ -1,0 +1,13 @@
+{
+  "ray.0": "Following",
+  "ray.1": "Wandering",
+  "ray.2": "Sitting",
+
+
+  "entity.metal_gear_mod.ray": "Ray",
+
+  "itemGroup.metal_gear_mod": "Metal Gear Ray",
+
+
+  "item.metal_gear_mod.ray_spawn_egg": "Ray Spawn Egg"
+}
