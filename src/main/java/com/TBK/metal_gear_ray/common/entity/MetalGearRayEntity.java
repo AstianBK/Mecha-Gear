@@ -728,6 +728,8 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             this.setBladeOn(!this.bladeOn());
         }else if(p_21375_==17){
             this.setLaser(false);
+            this.idleAnimationTimeout=0;
+            this.laser.stop();
         }
         super.handleEntityEvent(p_21375_);
     }
