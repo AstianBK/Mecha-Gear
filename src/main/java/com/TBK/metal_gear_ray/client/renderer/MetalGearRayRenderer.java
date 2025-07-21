@@ -38,9 +38,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
 
     @Override
     public void render(T p_115455_, float p_115456_, float p_115457_, PoseStack p_115458_, MultiBufferSource p_115459_, int p_115460_) {
-        if(Minecraft.getInstance().player!=p_115455_.getControllingPassenger() || !Minecraft.getInstance().options.getCameraType().isFirstPerson()){
-            super.render(p_115455_, p_115456_, p_115457_, p_115458_, p_115459_, p_115460_);
-        }
+        super.render(p_115455_, p_115456_, p_115457_, p_115458_, p_115459_, p_115460_);
         if(p_115455_.isLaser()){
             this.render(p_115458_,p_115459_,p_115455_,p_115456_);
         }
