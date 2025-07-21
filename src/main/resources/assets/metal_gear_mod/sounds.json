@@ -8,7 +8,7 @@
   "ray_roar": {
     "subtitle": "sounds.metal_gear_mod.ray_roar",
     "sounds": [
-      "creature_compendium:netherforge_detonate_boom"
+      "metal_gear_mod:ray_roar"
     ]
   },
   "ray_charge_laser": {
