@@ -25,6 +25,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.vehicle.DismountHelper;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -76,6 +77,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     public float rotHeadX0 = 0.0F;
     public boolean isJumping = false;
     public float jumpPendingScale = 0.0F;
+    public int cooldownLaser=0;
     public MetalGearRayEntity(EntityType<? extends PathfinderMob> p_21368_, Level p_21369_) {
         super(p_21368_, p_21369_);
         this.tower0=new TowerPart<>(this,"tower0",1,1);
@@ -263,6 +265,8 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             }
             if(!this.isVehicle()){
                 this.checkTick();
+            }else {
+                this.towerTick();
             }
         }
 
@@ -304,6 +308,9 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             }
         }
 
+        if(this.cooldownLaser>0){
+            this.cooldownLaser--;
+        }
 
         if(this.isLaser()){
             this.laserTimer--;
@@ -313,7 +320,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                     EntityHitResult hit = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(),this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(50.0D)),this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
                     if(hit!=null && hit.getEntity() instanceof  LivingEntity){
                         LivingEntity entity = (LivingEntity) hit.getEntity();
-                        if(entity.hurt(this.damageSources().magic(),3.0F)){
+                        if(entity.hurt(this.damageSources().generic(),3.0F)){
                             entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,3,10));
                         }
                     }
@@ -355,13 +362,14 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             }
             if(this.laserTimer<=0){
                 this.setLaser(false);
+                this.cooldownLaser=1200;
             }
         }
         if(this.isAttacking()){
             this.attackTimer--;
             if(this.attackTimer==0){
                 if(this.bladeOn()){
-                    List<Entity> targets = this.level().getEntitiesOfClass(Entity.class,this.getBoundingBox().inflate(7,7,7), e -> e!=this.getControllingPassenger() && e != this && this.distanceTo(e) <= 7 + e.getBbWidth() / 2f && e.getY() <= this.getY() + 7);
+                    List<Entity> targets = this.level().getEntitiesOfClass(Entity.class,this.body.getBoundingBox().inflate(3,3,3), e -> e!=this.getControllingPassenger() && e != this && this.distanceTo(e) <= 7 + e.getBbWidth() / 2f && e.getY() <= this.getY() + 7);
                     for(Entity living : targets){
                         float entityHitAngle = (float) ((Math.atan2(living.getZ() - this.getZ(), living.getX() - this.getX()) * (180 / Math.PI) - 90) % 360);
                         float entityAttackingAngle = this.getYRot() % 360;
@@ -394,8 +402,10 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         if(this.level().isClientSide){
             this.clientTick();
         }
+
         this.rotHeadY0 = this.rotHeadY;
         this.rotHeadX0 = this.rotHeadX;
+
         while(this.rotHeadX - this.rotHeadX0 < -180.0F) {
             this.rotHeadX0 -= 360.0F;
         }
@@ -462,42 +472,6 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         for(Entity entity:this.getPassengers()){
             return (LivingEntity) entity;
         }
-        return null;
-    }
-
-    @javax.annotation.Nullable
-    private Vec3 getDismountLocationInDirection(Vec3 p_30562_, LivingEntity p_30563_) {
-        double d0 = this.getX() + p_30562_.x;
-        double d1 = this.getBoundingBox().minY;
-        double d2 = this.getZ() + p_30562_.z;
-        BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
-
-        for(Pose pose : p_30563_.getDismountPoses()) {
-            blockpos$mutableblockpos.set(d0, d1, d2);
-            double d3 = this.getBoundingBox().maxY + 0.75D;
-
-            while(true) {
-                double d4 = this.level().getBlockFloorHeight(blockpos$mutableblockpos);
-                if ((double)blockpos$mutableblockpos.getY() + d4 > d3) {
-                    break;
-                }
-
-                if (DismountHelper.isBlockFloorValid(d4)) {
-                    AABB aabb = p_30563_.getLocalBoundsForPose(pose);
-                    Vec3 vec3 = new Vec3(d0, (double)blockpos$mutableblockpos.getY() + d4, d2);
-                    if (DismountHelper.canDismountTo(this.level(), p_30563_, aabb.move(vec3))) {
-                        p_30563_.setPose(pose);
-                        return vec3;
-                    }
-                }
-
-                blockpos$mutableblockpos.move(Direction.UP);
-                if (!((double)blockpos$mutableblockpos.getY() < d3)) {
-                    break;
-                }
-            }
-        }
-
         return null;
     }
     protected void doPlayerRide(Player pPlayer) {
@@ -572,7 +546,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     }
 
     public void setLaser(boolean value){
-        this.laserTimer = value ? 2000 : 0;
+        this.laserTimer = value ? 200 : 0;
         this.entityData.set(LASER,value);
     }
 
@@ -580,17 +554,29 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         List<LivingEntity> list = this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(40.0D),e->!this.is(e));
         for (TowerPart<?> part : this.towers){
             Optional<LivingEntity> optional = list.stream().findAny();
-            if(optional.isPresent() && this.tickCount%40==0 && !this.level().isClientSide){
+            if(optional.isPresent() && this.tickCount%10==0 && !this.level().isClientSide){
                 LivingEntity target = optional.get();
                 BulletEntity arrow = new BulletEntity(this.level());
                 arrow.setOwner(this);
                 arrow.setPos(part.position());
-                arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),2.0F,1.0F);
+                arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                 this.level().addFreshEntity(arrow);
             }
         }
     }
-
+    private void towerTick() {
+        for (TowerPart<?> part : this.towers){
+            BlockHitResult result = this.level().clip(new ClipContext(this.getHeadPos(),this.getControllingPassenger().getLookAngle().scale(30.0D), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
+            if(result.getType() == HitResult.Type.BLOCK && this.tickCount%10==0 && !this.level().isClientSide){
+                BlockPos target = result.getBlockPos();
+                BulletEntity arrow = new BulletEntity(this.level());
+                arrow.setOwner(this);
+                arrow.setPos(part.position());
+                arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
+                this.level().addFreshEntity(arrow);
+            }
+        }
+    }
     private void tickPart(TowerPart<?> p_31116_, double p_31117_, double p_31118_, double p_31119_) {
         p_31116_.setPos(this.getX() + p_31117_, this.getY() + p_31118_, this.getZ() + p_31119_);
     }
@@ -657,7 +643,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     private boolean isAttacking(){
         return this.entityData.get(ATTACKING);
     }
-    private boolean towerOn(){
+    public boolean towerOn(){
         return this.entityData.get(TOWER_ON);
     }
     private void setTowerOn(boolean b) {
@@ -666,7 +652,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     private void setBladeOn(boolean b) {
         this.entityData.set(BLADE_ON,b);
     }
-    private boolean bladeOn(){
+    public boolean bladeOn(){
         return this.entityData.get(BLADE_ON);
     }
     @Override
@@ -728,6 +714,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             }
             this.setBladeOn(!this.bladeOn());
         }else if(p_21375_==17){
+            this.cooldownLaser=1200;
             this.setLaser(false);
             this.idleAnimationTimeout=0;
             this.laser.stop();
@@ -790,6 +777,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                     if(this.isLaser()){
                         this.level().playSound(null,this, SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL,2.0F,1.0F);
                         this.setLaser(false);
+                        this.cooldownLaser=1200;
                         this.level().broadcastEntityEvent(this,(byte) 17);
                     }else {
                         this.level().broadcastEntityEvent(this,(byte) 13);
