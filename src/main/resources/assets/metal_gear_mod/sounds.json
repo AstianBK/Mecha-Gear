@@ -29,6 +29,12 @@
       "metal_gear_mod:ray_turret_shoot"
     ]
   },
+  "ray_turret_shoot2": {
+    "subtitle": "sounds.metal_gear_mod.ray_turret_shoot2",
+    "sounds": [
+      "metal_gear_mod:ray_turret_shoot2"
+    ]
+  },
   "ray_footstep": {
     "subtitle": "sounds.metal_gear_mod.ray_footstep",
     "sounds": [
