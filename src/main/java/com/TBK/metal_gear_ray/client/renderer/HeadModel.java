@@ -72,11 +72,11 @@ public class HeadModel <T extends MetalGearRayEntity, M extends MetalGearRayMode
     public void animation(ModelPart part,ModelPart part1,PoseStack stack){
         stack.translate(part1.x/16.0D,15+part1.y/16.0D,part1.z/16.0D);
         if (part1.xRot != 0.0F || part1.yRot != 0.0F || part1.zRot != 0.0F) {
-            stack.mulPose((new Quaternionf()).rotationZYX(part1.zRot , part1.yRot, part1.xRot));
+            stack.mulPose((new Quaternionf()).rotationZYX(part1.zRot , -part1.yRot, -part1.xRot));
         }
         stack.translate(0,0.25,-8.0D);
         if (part.xRot != 0.0F || part.yRot != 0.0F || part.zRot != 0.0F) {
-            stack.mulPose((new Quaternionf()).rotationZYX(part.zRot , part.yRot, part.xRot));
+            stack.mulPose((new Quaternionf()).rotationZYX(part.zRot , -part.yRot, -part.xRot));
         }
     }
 }
