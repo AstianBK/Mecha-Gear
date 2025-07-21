@@ -262,7 +262,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                 this.towers[l].zOld = avec3[l].z;
             }
             if(!this.isVehicle()){
-                //this.checkTick();
+                this.checkTick();
             }
         }
 
@@ -582,7 +582,8 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             Optional<LivingEntity> optional = list.stream().findAny();
             if(optional.isPresent() && this.tickCount%40==0 && !this.level().isClientSide){
                 LivingEntity target = optional.get();
-                Arrow arrow = new Arrow(this.level(),this);
+                BulletEntity arrow = new BulletEntity(this.level());
+                arrow.setOwner(this);
                 arrow.setPos(part.position());
                 arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),2.0F,1.0F);
                 this.level().addFreshEntity(arrow);

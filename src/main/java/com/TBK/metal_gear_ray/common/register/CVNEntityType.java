@@ -1,6 +1,7 @@
 package com.TBK.metal_gear_ray.common.register;
 
 import com.TBK.metal_gear_ray.MetalGearRayMod;
+import com.TBK.metal_gear_ray.common.entity.BulletEntity;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -20,5 +21,10 @@ public class CVNEntityType {
                             .clientTrackingRange(40)
                             .build(new ResourceLocation(MetalGearRayMod.MODID, "ray").toString()));
 
+    public static final RegistryObject<EntityType<BulletEntity>> BULLET =
+            ENTITY_TYPES.register("bullet",
+                    () -> EntityType.Builder.<BulletEntity>of(BulletEntity::new, MobCategory.MISC)
+                            .sized(0.2f, 0.2f)
+                            .build(new ResourceLocation(MetalGearRayMod.MODID, "bullet").toString()));
 
 }

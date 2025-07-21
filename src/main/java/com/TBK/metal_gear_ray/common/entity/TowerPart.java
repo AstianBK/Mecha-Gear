@@ -57,7 +57,7 @@ public class TowerPart<T extends MetalGearRayEntity> extends PartEntity<T> {
     }
 
     public boolean is(Entity p_31031_) {
-        return this == p_31031_ || this.parentMob == p_31031_;
+        return this == p_31031_ || this.parentMob.is(p_31031_);
     }
 
     @Override
