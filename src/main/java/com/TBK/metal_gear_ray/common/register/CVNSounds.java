@@ -33,6 +33,9 @@ public class CVNSounds {
     public static final RegistryObject<SoundEvent> RAY_FOOTSTEP =
             registerSoundEvent("ray_footstep");
 
+    public static final RegistryObject<SoundEvent> RAY_JUMP =
+            registerSoundEvent("ray_jump");
+
     public static RegistryObject<SoundEvent> registerSoundEvent(String name){
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MetalGearRayMod.MODID, name)));
     }

@@ -34,6 +34,12 @@
     "sounds": [
       "metal_gear_mod:ray_footstep"
     ]
+  },
+  "ray_jump": {
+    "subtitle": "sounds.metal_gear_mod.ray_jump",
+    "sounds": [
+      "metal_gear_mod:ray_jump"
+    ]
   }
 }
 
