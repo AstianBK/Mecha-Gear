@@ -22,6 +22,18 @@
     "sounds": [
       "metal_gear_mod:ray_shoot_laser"
     ]
+  },
+  "ray_turret_shoot": {
+    "subtitle": "sounds.metal_gear_mod.ray_turret_shoot",
+    "sounds": [
+      "metal_gear_mod:ray_turret_shoot"
+    ]
+  },
+  "ray_footstep": {
+    "subtitle": "sounds.metal_gear_mod.ray_footstep",
+    "sounds": [
+      "metal_gear_mod:ray_footstep"
+    ]
   }
 }
 
