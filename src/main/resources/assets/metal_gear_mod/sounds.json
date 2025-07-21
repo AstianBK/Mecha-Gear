@@ -1,0 +1,27 @@
+{
+  "ray_stomp": {
+    "subtitle": "sounds.metal_gear_mod.ray_stomp",
+    "sounds": [
+      "metal_gear_mod:ray_stomp"
+    ]
+  },
+  "ray_roar": {
+    "subtitle": "sounds.metal_gear_mod.ray_roar",
+    "sounds": [
+      "creature_compendium:netherforge_detonate_boom"
+    ]
+  },
+  "ray_charge_laser": {
+    "subtitle": "sounds.metal_gear_mod.ray_charge_laser",
+    "sounds": [
+      "metal_gear_mod:ray_charge_laser"
+    ]
+  },
+  "ray_shoot_laser": {
+    "subtitle": "sounds.metal_gear_mod.ray_shoot_laser",
+    "sounds": [
+      "metal_gear_mod:ray_shoot_laser"
+    ]
+  }
+}
+
