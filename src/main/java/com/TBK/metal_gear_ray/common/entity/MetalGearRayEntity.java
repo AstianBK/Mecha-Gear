@@ -109,7 +109,9 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
 
     public static AttributeSupplier setAttributes() {
         return TamableAnimal.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 35.0D)
+                .add(Attributes.MAX_HEALTH, 200.0D)
+                .add(Attributes.ARMOR,10.0D)
+                .add(Attributes.ARMOR_TOUGHNESS,5.0D)
                 .add(Attributes.FOLLOW_RANGE, 45.D)
                 .add(Attributes.MOVEMENT_SPEED, 0.1d)
                 .add(Attributes.ATTACK_DAMAGE,12.0D)
