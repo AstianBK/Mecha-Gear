@@ -30,7 +30,6 @@ public class ActionGui implements IGuiOverlay {
         assert player != null;
         if(mc.options.getCameraType().isFirstPerson()){
             if(player.isPassenger() && player.getVehicle() instanceof MetalGearRayEntity netheriteForge){
-                MetalGearRayMod.LOGGER.debug("Gui moment");
                 guiGraphics.pose().pushPose();
                 int i1 = screenWidth / 2 - 24;
                 int k1 = screenHeight - 66;
@@ -42,7 +41,7 @@ public class ActionGui implements IGuiOverlay {
                 if(netheriteForge.towerOn()){
                     printOverlay(guiGraphics,getTowerState(),screenWidth,screenHeight);
                 }
-                guiGraphics.blit(getLaserTextures(),i1, k1,0,0, 176, (int) Math.floor(176*cc),203,176);
+                guiGraphics.blit(getLaserTextures(),screenWidth , screenHeight,0,0, 176, (int) Math.floor(176*cc),203,176);
 
                 guiGraphics.pose().popPose();
             }
