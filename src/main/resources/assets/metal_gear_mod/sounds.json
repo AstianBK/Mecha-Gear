@@ -46,6 +46,12 @@
     "sounds": [
       "metal_gear_mod:ray_jump"
     ]
+  },
+  "ray_sword_swing": {
+    "subtitle": "sounds.metal_gear_mod.ray_sword_swing",
+    "sounds": [
+      "metal_gear_mod:ray_sword_swing"
+    ]
   }
 }
 
