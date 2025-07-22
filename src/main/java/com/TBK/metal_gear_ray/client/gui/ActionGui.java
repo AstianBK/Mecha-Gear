@@ -13,6 +13,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
@@ -31,9 +32,7 @@ public class ActionGui implements IGuiOverlay {
         if(mc.options.getCameraType().isFirstPerson()){
             if(player.isPassenger() && player.getVehicle() instanceof MetalGearRayEntity netheriteForge){
                 guiGraphics.pose().pushPose();
-                int i1 = screenWidth / 2 - 24;
-                int k1 = screenHeight - 66;
-                float cc = ((float)netheriteForge.cooldownLaser/1200.0F);
+                float cc = (((float)netheriteForge.cooldownLaser)/50.0F);
                 printOverlay(guiGraphics,getGuiTextures(),screenWidth,screenHeight);
                 if(netheriteForge.bladeOn()){
                     printOverlay(guiGraphics,getBladeState(),screenWidth,screenHeight);
@@ -41,13 +40,34 @@ public class ActionGui implements IGuiOverlay {
                 if(netheriteForge.towerOn()){
                     printOverlay(guiGraphics,getTowerState(),screenWidth,screenHeight);
                 }
-                guiGraphics.blit(getLaserTextures(),screenWidth , screenHeight,0,0, 176, (int) Math.floor(176*cc),203,176);
-
+                //printOverlay(guiGraphics,getLaserTextures(),i1,k1);
+                this.printOverlayPercent(guiGraphics,getLaserTextures(),screenWidth,screenHeight,1.0F);
+                this.printOverlayPercent(guiGraphics,getOffLaserTextures(),screenWidth,screenHeight,cc);
                 guiGraphics.pose().popPose();
             }
         }
     }
+    public void printOverlayPercent(GuiGraphics guiGraphics, ResourceLocation resourceLocation, int screenWidth, int screenHeight, float percentHeight) {
+        int originalX = 0;
+        int originalY = 0;
+        int spriteWidth = 103;
+        int spriteHeight = 101;
 
+        float drawX = (float) (( 406 + MetalGearRayMod.x + screenWidth / 2f));
+        float drawY = (float) (( 266 + MetalGearRayMod.y + screenHeight));
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().scale(1.0f / 3.0F, 1.0F / 3.0F, 1.0F);
+
+        guiGraphics.blit(resourceLocation,
+                (int) drawX, (int) drawY,
+                originalX, originalY,
+                spriteWidth, Mth.floor(spriteHeight*percentHeight),
+                spriteWidth, spriteHeight
+        );
+
+        guiGraphics.pose().popPose();
+    }
     public void printOverlay(GuiGraphics guiGraphics,ResourceLocation resourceLocation,int screenWidth,int screenHeight){
         guiGraphics.pose().pushPose();
         RenderSystem.disableDepthTest();
@@ -55,7 +75,7 @@ public class ActionGui implements IGuiOverlay {
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0,resourceLocation  );
+        RenderSystem.setShaderTexture(0,resourceLocation);
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tesselator.getBuilder();
         bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
@@ -80,5 +100,8 @@ public class ActionGui implements IGuiOverlay {
     }
     public ResourceLocation getLaserTextures(){
         return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/ray_laser_on_overlay.png");
+    }
+    public ResourceLocation getOffLaserTextures(){
+        return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/ray_laser_off_overlay.png");
     }
 }

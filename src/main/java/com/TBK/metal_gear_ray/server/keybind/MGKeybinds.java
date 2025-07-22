@@ -11,20 +11,16 @@ import java.awt.event.KeyEvent;
 
 @Mod.EventBusSubscriber(modid = MetalGearRayMod.MODID,bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class MGKeybinds {
-    public static KeyMapping attackKey1;
     public static KeyMapping attackKey2;
     public static KeyMapping attackKey3;
     public static KeyMapping attackKey4;
 
-
     @SubscribeEvent
     public static void register(final RegisterKeyMappingsEvent event) {
-        attackKey1 = create("attack_key1", KeyEvent.VK_Q);
         attackKey2 = create("attack_key2", KeyEvent.VK_Z);
         attackKey3 = create("attack_key3", KeyEvent.VK_C);
         attackKey4 = create("attack_key4", KeyEvent.VK_R);
 
-        event.register(attackKey1);
         event.register(attackKey2);
         event.register(attackKey3);
         event.register(attackKey4);

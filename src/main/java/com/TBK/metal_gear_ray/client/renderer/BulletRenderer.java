@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -19,6 +20,12 @@ public class BulletRenderer<T extends BulletEntity> extends EntityRenderer<T> {
     public BulletRenderer(EntityRendererProvider.Context p_174008_) {
         super(p_174008_);
     }
+
+    @Override
+    public boolean shouldRender(T p_114491_, Frustum p_114492_, double p_114493_, double p_114494_, double p_114495_) {
+        return true;
+    }
+
     public void render(T p_113839_, float p_113840_, float p_113841_, PoseStack p_113842_, MultiBufferSource p_113843_, int p_113844_) {
         p_113842_.pushPose();
         p_113842_.mulPose(Axis.YP.rotationDegrees(Mth.lerp(p_113841_, p_113839_.yRotO, p_113839_.getYRot()) - 90.0F));
@@ -27,7 +34,7 @@ public class BulletRenderer<T extends BulletEntity> extends EntityRenderer<T> {
         p_113842_.mulPose(Axis.XP.rotationDegrees(45.0F));
         p_113842_.scale(0.05625F, 0.05625F, 0.05625F);
         p_113842_.translate(-4.0F, 0.0F, 0.0F);
-        VertexConsumer vertexconsumer = p_113843_.getBuffer(RenderType.entityCutout(this.getTextureLocation(p_113839_)));
+        VertexConsumer vertexconsumer = p_113843_.getBuffer(RenderType.eyes(this.getTextureLocation(p_113839_)));
         PoseStack.Pose posestack$pose = p_113842_.last();
         Matrix4f matrix4f = posestack$pose.pose();
         Matrix3f matrix3f = posestack$pose.normal();

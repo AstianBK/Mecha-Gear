@@ -21,4 +21,9 @@ public class CVNRenderType extends RenderType {
                 .setOutputState(ITEM_ENTITY_TARGET)
                 .createCompositeState(false));
     }
+
+    public static RenderType getGhostCrumbling(ResourceLocation texture) {
+        TextureStateShard lvt_1_1_ = new TextureStateShard(texture, false, false);
+        return create("ghost_crumbling_am", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 262144, false, true, RenderType.CompositeState.builder().setTextureState(lvt_1_1_).setShaderState(RenderStateShard.RENDERTYPE_ENERGY_SWIRL_SHADER).setTransparencyState(LIGHTNING_TRANSPARENCY).setCullState(NO_CULL).setLightmapState(LIGHTMAP).setOverlayState(OVERLAY).setLayeringState(VIEW_OFFSET_Z_LAYERING).setDepthTestState(LEQUAL_DEPTH_TEST).setCullState(RenderStateShard.NO_CULL).createCompositeState(true));
+    }
 }

@@ -5,20 +5,32 @@ import com.TBK.metal_gear_ray.client.model.MetalGearRayModel;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import com.TBK.metal_gear_ray.common.register.CVNRenderType;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGearRayModel<T>> extends MobRenderer<T,M> {
     public final ResourceLocation TEXTURE = new ResourceLocation(MetalGearRayMod.MODID,"textures/entity/metal_gear_ray/ray.png");
@@ -28,6 +40,24 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
     public MetalGearRayRenderer(EntityRendererProvider.Context p_174304_) {
         super(p_174304_, (M) new MetalGearRayModel<>(p_174304_.bakeLayer(MetalGearRayModel.LAYER_LOCATION)), 0.0F);
         this.addLayer(new HeadModel<>(this));
+        this.addLayer(new EmissiveLayer<>(this));
+    }
+
+    @Override
+    public boolean shouldRender(T p_115468_, Frustum p_115469_, double p_115470_, double p_115471_, double p_115472_) {
+        if(super.shouldRender(p_115468_, p_115469_, p_115470_, p_115471_, p_115472_)){
+            return true;
+        }else {
+            List<BlockPos> posList = p_115468_.crackingBlock.keySet().stream().toList();
+            for (BlockPos pos : posList ){
+                Vec3 vector3d = Vec3.atLowerCornerOf(pos);
+                Vec3 vector3dCorner = Vec3.atLowerCornerOf(pos).add(1, 1, 1);
+                if(p_115469_.isVisible(new AABB(vector3d.x, vector3d.y, vector3d.z, vector3dCorner.x, vector3dCorner.y, vector3dCorner.z))){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Nullable
@@ -36,11 +66,35 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         return RenderType.entityTranslucent(this.getTextureLocation(p_115322_));
     }
 
+
+
     @Override
     public void render(T p_115455_, float p_115456_, float p_115457_, PoseStack p_115458_, MultiBufferSource p_115459_, int p_115460_) {
         super.render(p_115455_, p_115456_, p_115457_, p_115458_, p_115459_, p_115460_);
+        for(Map.Entry<BlockPos,Integer> entry : p_115455_.crackingBlock.entrySet()){
+            p_115458_.pushPose();
+            float progressMining = ((float)p_115455_.restoreCracking-entry.getValue())/20.0F;
+            if(progressMining>=0.0F){
+                BlockPos miningPos = entry.getKey();
+                double d0 = p_115455_.getX();
+                double d1 = p_115455_.getY();
+                double d2 = p_115455_.getZ();
+
+
+                p_115458_.translate((double) miningPos.getX() - d0, (double) miningPos.getY() - d1, (double) miningPos.getZ() - d2);
+                PoseStack.Pose posestack$pose = p_115458_.last();
+                int progress = (int) Math.round((ModelBakery.DESTROY_TYPES.size() - 1) * (float) Mth.clamp(progressMining, 0F, 1.0F));
+
+                VertexConsumer vertexconsumer1 = new SheetedDecalTextureGenerator(Minecraft.getInstance().renderBuffers().crumblingBufferSource().getBuffer(ModelBakery.DESTROY_TYPES.get(progress)), posestack$pose.pose(), posestack$pose.normal(), 1.0F);
+
+                net.minecraftforge.client.model.data.ModelData modelData = p_115455_.level().getModelDataManager().getAt(miningPos);
+                Minecraft.getInstance().getBlockRenderer().renderBreakingTexture(p_115455_.level().getBlockState(miningPos), miningPos, p_115455_.level(), p_115458_, vertexconsumer1, modelData == null ? net.minecraftforge.client.model.data.ModelData.EMPTY : modelData);
+            }
+            p_115458_.popPose();
+        }
+
         if(p_115455_.isLaser()){
-            this.render(p_115458_,p_115459_,p_115455_,p_115456_);
+            this.render(p_115458_,p_115459_,p_115455_,p_115457_);
         }
     }
 
@@ -53,7 +107,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         float shakeByY = (float) Math.sin(ageInTicks * 4F + 1.2F) * 0.075F;
         float shakeByZ = (float) Math.sin(ageInTicks * 4F + 2.4F) * 0.075F;
         Vec3 beamOrigin = jellyfish.getHeadPos();
-        Vec3 rawBeamPosition = jellyfish.getBeamDirection(pPartialTicks);
+        Vec3 rawBeamPosition = jellyfish.getBeamDirection();
         float length = (float) rawBeamPosition.length();
         Vec3 vec3 = rawBeamPosition.normalize();
         float xRot = (float) Math.acos(vec3.y);
@@ -79,13 +133,6 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         pMatrixStack.popPose();
     }
 
-    private float lerpRotation(float currentYaw, float targetYaw, float maxTurnSpeed) {
-        float deltaYaw = Mth.wrapDegrees(targetYaw - currentYaw);
-
-        float clampedDelta = Mth.clamp(deltaYaw, -maxTurnSpeed, maxTurnSpeed);
-
-        return currentYaw + clampedDelta;
-    }
 
     private void renderBeam(T entity, PoseStack poseStack, MultiBufferSource source, float partialTicks, float width, float length, boolean inner, boolean glowSecondPass) {
         poseStack.pushPose();

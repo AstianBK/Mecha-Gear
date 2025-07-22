@@ -3,11 +3,14 @@ package com.TBK.metal_gear_ray.server;
 
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.api.IMecha;
+import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -24,7 +27,6 @@ public class Events {
     public static void onUseItem(PlayerInteractEvent.RightClickItem event) {
         if(event.getItemStack().is(Items.STICK)){
             if(event.getEntity().isShiftKeyDown()){
-                MetalGearRayMod.x+=0.5D;
             }else {
                 MetalGearRayMod.x-=0.5D;
             }
@@ -33,26 +35,21 @@ public class Events {
 
         if(event.getItemStack().is(Items.BLAZE_ROD)){
             if(event.getEntity().isShiftKeyDown()){
-                MetalGearRayMod.y+=0.5D;
             }else {
                 MetalGearRayMod.y-=0.5D;
             }
             MetalGearRayMod.LOGGER.debug("Y :" + MetalGearRayMod.y);
         }
         if(event.getItemStack().is(Items.PRISMARINE_SHARD)){
-            if(event.getEntity().isShiftKeyDown()){
-                MetalGearRayMod.z+=0.5D;
-            }else {
-                MetalGearRayMod.z-=0.5D;
-            }
+            MetalGearRayMod.y+=0.5D;
+
             MetalGearRayMod.LOGGER.debug("Z :" + MetalGearRayMod.z);
         }
 
         if(event.getItemStack().is(Items.HEART_OF_THE_SEA)){
             if(event.getEntity().isShiftKeyDown()){
-                MetalGearRayMod.xq+=0.5D;
             }else {
-                MetalGearRayMod.xq-=0.5D;
+                MetalGearRayMod.x+=0.5D;
             }
             MetalGearRayMod.LOGGER.debug("XQ :" + MetalGearRayMod.xq);
         }

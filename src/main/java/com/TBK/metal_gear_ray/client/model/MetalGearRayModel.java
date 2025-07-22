@@ -437,6 +437,8 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		this.animate(entity.idle,MetalGearRayAnim.idlelegs,ageInTicks,1.0F);
 		this.animate(entity.idle,MetalGearRayAnim.idletail,ageInTicks,1.0F);
 
+		this.animate(entity.in_water,MetalGearRayAnim.swim,ageInTicks,1.0F);
+
 		this.animate(entity.tower_on,MetalGearRayAnim.turreton,ageInTicks,1.0F);
 		this.animate(entity.tower_off,MetalGearRayAnim.turretoff,ageInTicks,1.0F);
 
@@ -447,9 +449,10 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 			this.LeftLeg.getAllParts().forEach(ModelPart::resetPose);
 			this.RightLeg.getAllParts().forEach(ModelPart::resetPose);
 		}
-		this.animateWalk(MetalGearRayAnim.walkbody,limbSwing,limbSwingAmount,2.0F,2.0F);
-		this.animateWalk(MetalGearRayAnim.walklegs,limbSwing,limbSwingAmount,2.0F,2.0F);
-		this.animateWalk(MetalGearRayAnim.walktail,limbSwing,limbSwingAmount,2.0F,2.0F);
+		this.animateWalk(MetalGearRayAnim.walkbody,limbSwing,limbSwingAmount,2.0F,2.5F);
+		this.animateWalk(MetalGearRayAnim.walklegs,limbSwing,limbSwingAmount,2.0F,2.5F);
+		this.animateWalk(MetalGearRayAnim.walktail,limbSwing,limbSwingAmount,2.0F,2.5F);
+
 		if(entity.stomp.isStarted()){
 			this.LeftLeg.getAllParts().forEach(ModelPart::resetPose);
 			this.RightLeg.getAllParts().forEach(ModelPart::resetPose);
@@ -462,6 +465,11 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		}
 		this.animate(entity.prepare_laser,MetalGearRayAnim.lazer,ageInTicks,1.0F);
 		this.animate(entity.laser,MetalGearRayAnim.lazerloop,ageInTicks,1.0F);
+
+		if(entity.isInWater()){
+			this.root().y= (float) (-12.0F);
+		}
+
 	}
 
 	@Override

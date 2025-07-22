@@ -39,9 +39,20 @@ public class PacketKeySync implements Packet<PacketListener> {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() ->{
             Player player = context.get().getSender();
-            if(player!=null && player.getVehicle() instanceof IMecha mecha){
-                mecha.handleKey(this.key);
+            if(player!=null ){
+
+                if(player.getVehicle()!=null){
+                    if(this.key == 2){
+                        player.getVehicle().setSprinting(true);
+                    }else if(this.key == 3){
+                        player.getVehicle().setSprinting(false);
+                    }else if(player.getVehicle() instanceof IMecha mecha){
+                        mecha.handleKey(this.key);
+                    }
+                }
+
             }
+
         });
         context.get().setPacketHandled(true);
     }
