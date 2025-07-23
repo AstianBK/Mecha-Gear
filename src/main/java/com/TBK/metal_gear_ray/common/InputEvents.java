@@ -26,7 +26,7 @@ public class InputEvents {
     }
 
     private static void onInput(Minecraft mc, int key, int action) {
-        if (mc.screen == null && (key==0 ||  MGKeybinds.attackKey2.consumeClick() ||MGKeybinds.attackKey3.consumeClick() ||MGKeybinds.attackKey4.consumeClick())) {
+        if (mc.screen == null && !mc.isPaused() && (key==0 ||  MGKeybinds.attackKey2.consumeClick() ||MGKeybinds.attackKey3.consumeClick() ||MGKeybinds.attackKey4.consumeClick())) {
             PacketHandler.sendToServer(new PacketKeySync(key));
         }
     }

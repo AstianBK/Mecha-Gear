@@ -73,7 +73,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         super.render(p_115455_, p_115456_, p_115457_, p_115458_, p_115459_, p_115460_);
         for(Map.Entry<BlockPos,Integer> entry : p_115455_.crackingBlock.entrySet()){
             p_115458_.pushPose();
-            float progressMining = ((float)p_115455_.restoreCracking-entry.getValue())/20.0F;
+            float progressMining = ((float)p_115455_.restoreCracking-entry.getValue())/200.0F;
             if(progressMining>=0.0F){
                 BlockPos miningPos = entry.getKey();
                 double d0 = p_115455_.getX();

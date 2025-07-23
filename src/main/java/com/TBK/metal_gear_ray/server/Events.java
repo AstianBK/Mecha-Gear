@@ -8,11 +8,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -88,13 +90,26 @@ public class Events {
             }
         }
     }
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public static void onCameraSetup(ViewportEvent.ComputeCameraAngles event) {
+
+        if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle() instanceof MetalGearRayEntity ray){
+            event.setPitch(event.getPitch()); // igual
+            event.setYaw(event.getYaw());     // igual
+            if(!ray.isLaser() && !Minecraft.getInstance().options.getCameraType().isFirstPerson()){
+                Minecraft.getInstance().gameRenderer.getMainCamera().move(-25 * ray.getCamInterpolation(Minecraft.getInstance().getPartialTick()), 0, 0);
+            }
+        }
+    }
+
 
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void renderEvent(RenderLivingEvent.Pre<?,?> event){
         if(event.getEntity().isPassenger()){
             Entity mount = event.getEntity().getVehicle();
-            if(mount instanceof IMecha){
+            if(mount instanceof MetalGearRayEntity ray){
                 event.setCanceled(true);
             }
         }

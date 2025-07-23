@@ -34,7 +34,7 @@ public class EmissiveLayer<T extends MetalGearRayEntity, M extends MetalGearRayM
 
     @Override
     public void render(PoseStack p_117349_, MultiBufferSource p_117350_, int p_117351_, T p_117352_, float p_117353_, float p_117354_, float p_117355_, float p_117356_, float p_117357_, float p_117358_) {
-        this.getParentModel().renderToBuffer(p_117349_,p_117350_.getBuffer(RenderType.eyes(GLOWING_PART)), LivingEntityRenderer.getOverlayCoords(p_117352_,1.0F),OverlayTexture.NO_OVERLAY,1.0F,1.0F,1.0F,1.0F);
+        this.getParentModel().renderToBuffer(p_117349_,p_117350_.getBuffer(RenderType.entityTranslucentEmissive(GLOWING_PART)), LivingEntityRenderer.getOverlayCoords(p_117352_,1.0F),OverlayTexture.NO_OVERLAY,1.0F,1.0F,1.0F,1.0F);
     }
 
 }

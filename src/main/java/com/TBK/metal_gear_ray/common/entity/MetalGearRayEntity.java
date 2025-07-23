@@ -1,6 +1,5 @@
 package com.TBK.metal_gear_ray.common.entity;
 
-import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.api.IMecha;
 import com.TBK.metal_gear_ray.common.network.PacketHandler;
 import com.TBK.metal_gear_ray.common.network.messager.PacketActionRay;
@@ -11,15 +10,22 @@ import com.TBK.metal_gear_ray.server.keybind.MGKeybinds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
+import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -29,12 +35,17 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.level.ExplosionDamageCalculator;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.fluids.FluidType;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +53,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJumping, RiderShieldingMount, IMecha {
+public class MetalGearRayEntity extends PathfinderMob implements ContainerListener, HasCustomInventoryScreen,PlayerRideableJumping, RiderShieldingMount, IMecha {
     public static final EntityDataAccessor<Boolean> ATTACKING =
             SynchedEntityData.defineId(MetalGearRayEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> LASER =
@@ -91,6 +102,12 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     public Map<BlockPos,Integer> crackingBlock = new HashMap<>();
     public int restoreCracking = 0;
     public int smokeEffectTimer = 0;
+    public int interpolationCamTimer = 0;
+    public int interpolationCamTimer0 = 0;
+    protected SimpleContainer inventory;
+    private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
+
+
     public MetalGearRayEntity(EntityType<? extends PathfinderMob> p_21368_, Level p_21369_) {
         super(p_21368_, p_21369_);
         this.tower0=new TowerPart<>(this,"tower0",1,1);
@@ -113,6 +130,13 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             this.parts[i].setId(p_20235_ + i + 1);
     }
 
+    @Nullable
+    @Override
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor p_21434_, DifficultyInstance p_21435_, MobSpawnType p_21436_, @Nullable SpawnGroupData p_21437_, @Nullable CompoundTag p_21438_) {
+        this.createInventory();
+        return super.finalizeSpawn(p_21434_, p_21435_, p_21436_, p_21437_, p_21438_);
+    }
+
     public static AttributeSupplier setAttributes() {
         return TamableAnimal.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 200.0D)
@@ -126,7 +150,9 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                 .build();
 
     }
-
+    protected int getInventorySize() {
+        return 54;
+    }
     @Override
     protected void registerGoals() {
         super.registerGoals();
@@ -145,7 +171,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     public Vec3 getBeamDirection(){
         Vec3 direction;
         if(this.isVehicle()){
-            direction = this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(50.0D)).subtract(this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(0.5D)));
+            direction = this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(50.0D)).subtract(this.getControllingPassenger().getEyePosition().add(this.getControllingPassenger().getLookAngle().scale(1D)));
         }else {
             direction = this.getHeadPos().add(this.viewHeadY().scale(50.0D)).subtract(this.getHeadPos().add(this.viewHeadY().scale(0.5D)));
         }
@@ -155,6 +181,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     protected void executeRidersJump(float p_251967_, Vec3 p_275627_) {
         double d0 = this.getAttributeValue(Attributes.JUMP_STRENGTH) * (double)this.getBlockJumpFactor() + (double)this.getJumpBoostPower();
         this.addDeltaMovement(this.getLookAngle().multiply(1.0D, 0.0D, 1.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(4.4285F * p_251967_) * d0, 0.0D));
+        this.setIsJumping(true);
         this.hasImpulse = true;
     }
 
@@ -166,6 +193,12 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             }
 
             if (this.onGround()) {
+                if(this.isJumping()){
+                    this.pushEntities(this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(10)));
+                    if(this.level().isClientSide){
+                        this.applyRadius(10,0.2F,this.position());
+                    }
+                }
                 this.setIsJumping(false);
                 if (this.jumpPendingScale>0.0F && !this.isJumping()) {
                     this.executeRidersJump(1.0F, p_275693_);
@@ -190,15 +223,31 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         if(this.getPassengers().contains(p_21016_.getEntity())){
             return false;
         }
+        p_21017_ = Math.min(50,p_21017_);
+
         return super.hurt(p_21016_, p_21017_);
     }
 
+    @javax.annotation.Nullable
+    protected SoundEvent getHurtSound(DamageSource p_21239_) {
+        return SoundEvents.IRON_GOLEM_HURT;
+    }
     @Override
     public void tick() {
         super.tick();
 
         this.refreshDimensions();
 
+        if(this.lastHurtByPlayerTime + 250 >this.tickCount || this.getLastHurtMobTimestamp()+250>this.tickCount){
+            if(this.getMaxHealth()!=this.getHealth()){
+                if(this.tickCount%100==0){
+                    if(!this.level().isClientSide){
+                        this.heal(1);
+                    }
+                    this.spawParticleHeal();
+                }
+            }
+        }
         if(!this.isVehicle()){
             if(this.level().getEntities(this,this.body.getBoundingBox().inflate(3.0F),EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(e->!this.is(e))).isEmpty()){
                 this.setTowerOn(false);
@@ -473,7 +522,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                         for (BlockPos pos2 : BlockPos.betweenClosed(this.getOnPos().offset(10,1,10),this.getOnPos().offset(-10,-1,-10))){
                             if(!this.level().getBlockState(pos2).isAir()){
                                 float entityHitDistance = Math.max((float) Math.sqrt((pos2.getZ() - this.getZ()) * (pos2.getZ() - this.getZ()) + (pos2.getX() - this.getX()) * (pos2.getX() - this.getX())),0);
-                                if (entityHitDistance <= 11 && entityHitDistance >=2) {
+                                if (entityHitDistance <= 12 && entityHitDistance >=2) {
                                     Random random1 = new Random();
                                     double distance = 0.12F*Math.ceil(entityHitDistance) + random1.nextFloat(0.0F,1.0F);
                                     BlockPos.MutableBlockPos pos1 = pos2.mutable();
@@ -484,17 +533,17 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                                         }
                                     }
                                     if(canSummon){
-                                        distance = Math.min(10,Math.ceil(entityHitDistance));
+                                        distance = Mth.clamp((12.0F/entityHitDistance),0.0F,1.0f);
                                         posSet.put(new BlockPos(pos2.getX(), pos2.getY(), pos2.getZ()), (int) (distance));
                                     }
                                 }
                             }
                         }
                         this.crackingBlock = posSet;
-                        this.restoreCracking = 20;
+                        this.restoreCracking = 200;
                     }
 
-                    this.pushEntities(this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(10)));
+                    this.upEntities(this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(10)));
 
                 }
             }
@@ -502,6 +551,10 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                 this.setIsAttacking(false);
             }
         }
+        this.rotHeadY0 = this.rotHeadY;
+        this.rotHeadX0 = this.rotHeadX;
+
+        this.interpolationCamTimer0 = this.interpolationCamTimer;
 
         if(this.level().isClientSide){
             this.clientTick();
@@ -511,10 +564,29 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                     this.crackingBlock.clear();
                 }
             }
+        }else{
+            if(this.isSprinting()){
+                this.knockBack(this.level().getEntities(this,this.body.getBoundingBox().inflate(1.2F),e->!this.is(e)),false);
+            }
+
         }
 
-        this.rotHeadY0 = this.rotHeadY;
-        this.rotHeadX0 = this.rotHeadX;
+        if (this.horizontalCollision && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.level(), this)) {
+            boolean flag = false;
+            AABB aabb = this.body.getBoundingBox().inflate(0.2D);
+
+            for(BlockPos blockpos : BlockPos.betweenClosed(Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ), Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
+                BlockState blockstate = this.level().getBlockState(blockpos);
+                Block block = blockstate.getBlock();
+                if (block instanceof LeavesBlock || blockstate.is(BlockTags.LOGS)) {
+                    flag = this.level().destroyBlock(blockpos, true, this) || flag;
+                }
+            }
+
+            if (!flag && this.onGround()) {
+                this.jumpFromGround();
+            }
+        }
 
         while(this.rotHeadX - this.rotHeadX0 < -180.0F) {
             this.rotHeadX0 -= 360.0F;
@@ -539,6 +611,8 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         explosion.finalizeExplosion(false);
         return explosion;
     }
+
+
     @Override
     public boolean doHurtTarget(Entity p_21372_) {
         boolean flag = super.doHurtTarget(p_21372_);
@@ -547,10 +621,56 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         }
         return flag;
     }
+    public void applyRadius(float radius, float speedY, Vec3 pos){
+        int i;
+        i = Mth.ceil((float)Math.PI * radius * radius);
+        float radius1 = (float)Math.PI /(float) i;
+        Random random1 = new Random();
+        for(int j=0;j<=i*2;j++){
+            float f1 = Mth.sin(j * radius1)*radius;
+            float f2 = Mth.cos(j * radius1)*radius;
+            this.level().addParticle(ParticleTypes.POOF,(float)pos.x+f2 ,(float)pos.y,(float)pos.z+f1,
+                    0.01F,
+                    random1.nextFloat(0.0F,speedY),
+                    0.01F);
+        }
+    }
 
     @Override
     protected void checkFallDamage(double p_20990_, boolean p_20991_, BlockState p_20992_, BlockPos p_20993_) {
 
+    }
+    private void knockBack(List<Entity> p_31132_, boolean up) {
+        double d0 = (this.getBoundingBox().minX + this.getBoundingBox().maxX) / 2.0D;
+        double d1 = (this.getBoundingBox().minZ + this.getBoundingBox().maxZ) / 2.0D;
+
+        for(Entity entity : p_31132_) {
+            if (entity instanceof LivingEntity) {
+                this.knockBack((LivingEntity) entity,d0,d1);
+            }
+        }
+    }
+    private void knockBack(LivingEntity entity,double d0,double d1) {
+        double d2 = entity.getX() - d0;
+        double d3 = entity.getZ() - d1;
+        double d4 = Math.max(d2 * d2 + d3 * d3, 0.1D);
+        entity.push(d2 / d4 * 16.0D,(double)0.2F, d3 / d4 * 16.0D);
+        entity.hurt(damageSources().mobAttack(this), 20.0F);
+        this.doEnchantDamageEffects(this, entity);
+
+    }
+    private void hurt(List<Entity> p_31142_) {
+        for(Entity entity : p_31142_) {
+            if (entity instanceof LivingEntity) {
+                entity.hurt(damageSources().mobAttack(this),2.0F);
+                this.doEnchantDamageEffects(this, entity);
+            }
+        }
+
+    }
+    public float getCamInterpolation(float partialTicks){
+        float time = Mth.lerp(partialTicks,interpolationCamTimer0,interpolationCamTimer);
+        return 1.0F-(time/10.0F);
     }
 
     @Override
@@ -590,10 +710,29 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
 
     @Override
     public InteractionResult mobInteract(Player p_27584_, InteractionHand p_27585_) {
-        this.doPlayerRide(p_27584_);
+        ItemStack stack = p_27584_.getItemInHand(p_27585_);
+        if(stack.is(Items.NETHERITE_INGOT) && this.getMaxHealth()!=this.getHealth()){
+            if(!this.level().isClientSide){
+                this.heal(30.0F);
+            }
+            this.spawParticleHeal();
+
+            if(!p_27584_.getAbilities().instabuild){
+                stack.shrink(1);
+            }
+        }
         return super.mobInteract(p_27584_, p_27585_);
     }
-
+    public void spawParticleHeal() {
+        Random random = new Random();
+        for (int i = 0 ; i<5 ; i++){
+            double box = this.getBbWidth();
+            double xp = this.getX() + random.nextDouble(-box, box);
+            double yp = this.getY() + random.nextDouble(0.0d, this.getBbHeight());
+            double zp = this.getZ() + random.nextDouble(-box, box);
+            this.level().addParticle(ParticleTypes.HAPPY_VILLAGER,xp,yp,zp,0.0F,0.0F,0.0F);
+        }
+    }
     @javax.annotation.Nullable
     public LivingEntity getControllingPassenger() {
         for(Entity entity:this.getPassengers()){
@@ -741,7 +880,7 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     private void towerTick() {
         this.isShooting=true;
         if(this.tickCount%5==0 && !this.level().isClientSide){
-            BlockHitResult result = this.level().clip(new ClipContext(this.getHeadPos(),this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(30.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
+            BlockHitResult result = this.level().clip(new ClipContext(this.getHeadPos(),this.getControllingPassenger().getEyePosition().add(this.getControllingPassenger().getLookAngle().scale(30.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
             for (TowerPart<?> part : this.towers){
                 BlockPos target = result.getBlockPos();
                 BulletEntity arrow = new BulletEntity(this.level());
@@ -751,6 +890,11 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
                 this.level().addFreshEntity(arrow);
             }
         }
+    }
+
+    @Override
+    public boolean addEffect(MobEffectInstance p_147208_, @Nullable Entity p_147209_) {
+        return false;
     }
 
     @Override
@@ -766,13 +910,23 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
     private void tickPart(TowerPart<?> p_31116_, double p_31117_, double p_31118_, double p_31119_) {
         p_31116_.setPos(this.getX() + p_31117_, this.getY() + p_31118_, this.getZ() + p_31119_);
     }
-    public void pushEntities(List<LivingEntity> list){
+    public void upEntities(List<LivingEntity> list){
         for (LivingEntity livingEntity : list){
             if(!this.is(livingEntity) && livingEntity.hurt(this.damageSources().generic(),20.0F) ){
                 double dx = livingEntity.getX() - this.getX();
                 double dz = livingEntity.getZ() - this.getZ();
                 double normalize = dx * dx + dz * dz;
                 livingEntity.push(dx/normalize,1,dz/normalize);
+            }
+        }
+    }
+    public void pushEntities(List<LivingEntity> list){
+        for (LivingEntity livingEntity : list){
+            if(!this.is(livingEntity) && livingEntity.hurt(this.damageSources().generic(),20.0F) ){
+                double dx = livingEntity.getX() - this.getX();
+                double dz = livingEntity.getZ() - this.getZ();
+                double normalize = (dx * dx + dz * dz)*2;
+                livingEntity.push(dx/normalize,0.2F,dz/normalize);
             }
         }
     }
@@ -850,11 +1004,14 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
             }
         }
 
-        if(this.prepare_laser.isStarted()){
-            if(this.idleAnimationTimeout==13){
-                this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,2.0F,1.0F,false);
-            }
+        if(this.interpolationCamTimer>0){
+            this.interpolationCamTimer--;
         }
+
+        if(this.prepareLaserTimer==13){
+            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,2.0F,1.0F,false);
+        }
+
         if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==this){
             if(Minecraft.getInstance().options.keySprint.isDown()){
                 PacketHandler.sendToServer(new PacketKeySync(2));
@@ -890,6 +1047,45 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         this.entityData.define(BLADE_ON,false);
         this.entityData.define(TOWER_ON,false);
         this.entityData.define(LASER,false);
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag p_21484_) {
+        super.addAdditionalSaveData(p_21484_);
+        ListTag listtag = new ListTag();
+
+        if(this.inventory!=null){
+            for(int i = 2; i < this.inventory.getContainerSize(); ++i) {
+                ItemStack itemstack = this.inventory.getItem(i);
+                if (!itemstack.isEmpty()) {
+                    CompoundTag compoundtag = new CompoundTag();
+                    compoundtag.putByte("Slot", (byte)i);
+                    itemstack.save(compoundtag);
+                    listtag.add(compoundtag);
+                }
+            }
+
+            p_21484_.put("Items", listtag);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag p_21450_) {
+        super.readAdditionalSaveData(p_21450_);
+        if(this.inventory==null){
+            this.createInventory();
+        }
+        if(this.inventory!=null){
+            ListTag listtag = p_21450_.getList("Items", 10);
+
+            for(int i = 0; i < listtag.size(); ++i) {
+                CompoundTag compoundtag = listtag.getCompound(i);
+                int j = compoundtag.getByte("Slot") & 255;
+                if (j >= 2 && j < this.inventory.getContainerSize()) {
+                    this.inventory.setItem(j, ItemStack.of(compoundtag));
+                }
+            }
+        }
     }
 
     @Override
@@ -944,6 +1140,8 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         }else if(p_21375_==17){
             this.cooldownLaser=50;
             this.smokeEffectTimer=100;
+            this.interpolationCamTimer = 10;
+            this.interpolationCamTimer0 = 10;
             this.setLaser(false);
             this.idleAnimationTimeout=0;
             this.laser.stop();
@@ -1039,6 +1237,79 @@ public class MetalGearRayEntity extends PathfinderMob implements PlayerRideableJ
         }
     }
 
+    @Override
+    public void containerChanged(Container p_18983_) {
+
+    }
+
+    @Override
+    public void openCustomInventoryScreen(Player p_217023_) {
+        if (!this.level().isClientSide && (!this.isVehicle() || this.hasPassenger(p_217023_))) {
+            this.openInventory((ServerPlayer) p_217023_, this.inventory);
+        }
+    }
+
+    public void openInventory(ServerPlayer player, Container p_9060_) {
+        if (player.containerMenu != player.inventoryMenu) {
+            player.closeContainer();
+        }
+
+        player.nextContainerCounter();
+        player.connection.send(new ClientboundOpenScreenPacket(player.containerCounter, MenuType.GENERIC_9x6, Component.literal("Inventory")));
+        player.containerMenu = ChestMenu.sixRows(player.containerCounter, player.getInventory(), p_9060_);
+        player.initMenu(player.containerMenu);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open(player, player.containerMenu));
+    }
+
+    @Override
+    protected void dropEquipment() {
+        super.dropEquipment();
+        if (this.inventory != null) {
+            for(int i = 0; i < this.inventory.getContainerSize(); ++i) {
+                ItemStack itemstack = this.inventory.getItem(i);
+                if (!itemstack.isEmpty() && !EnchantmentHelper.hasVanishingCurse(itemstack)) {
+                    this.spawnAtLocation(itemstack);
+                }
+            }
+
+        }
+    }
+
+    protected void createInventory() {
+        SimpleContainer simplecontainer = this.inventory;
+        this.inventory = new SimpleContainer(this.getInventorySize());
+        if (simplecontainer != null) {
+            simplecontainer.removeListener(this);
+            int i = Math.min(simplecontainer.getContainerSize(), this.inventory.getContainerSize());
+
+            for(int j = 0; j < i; ++j) {
+                ItemStack itemstack = simplecontainer.getItem(j);
+                if (!itemstack.isEmpty()) {
+                    this.inventory.setItem(j, itemstack.copy());
+                }
+            }
+        }
+
+        this.inventory.addListener(this);
+        this.itemHandler = net.minecraftforge.common.util.LazyOptional.of(() -> new net.minecraftforge.items.wrapper.InvWrapper(this.inventory));
+    }
+
+    @Override
+    public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @javax.annotation.Nullable net.minecraft.core.Direction facing) {
+        if (capability == net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER && itemHandler != null && this.isAlive())
+            return itemHandler.cast();
+        return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        if (itemHandler != null) {
+            net.minecraftforge.common.util.LazyOptional<?> oldHandler = itemHandler;
+            itemHandler = null;
+            oldHandler.invalidate();
+        }
+    }
     class RayAttackGoal extends MeleeAttackGoal {
         public StratAttack currentAttack = StratAttack.STOMP;
         public int nextTimerStrat = 0;

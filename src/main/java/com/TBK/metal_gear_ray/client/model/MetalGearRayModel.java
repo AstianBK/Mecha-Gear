@@ -8,6 +8,7 @@ import com.TBK.metal_gear_ray.client.animations.MetalGearRayAnim;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -470,6 +471,11 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 			this.root().y= (float) (-12.0F);
 		}
 
+		if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==entity && Minecraft.getInstance().options.getCameraType().isFirstPerson()){
+			this.Neck.visible=false;
+		}else {
+			this.Neck.visible=true;
+		}
 	}
 
 	@Override
