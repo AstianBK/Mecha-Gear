@@ -171,7 +171,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     public Vec3 getBeamDirection(){
         Vec3 direction;
         if(this.isVehicle()){
-            direction = this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(50.0D)).subtract(this.getControllingPassenger().getEyePosition().add(this.getControllingPassenger().getLookAngle().scale(1D)));
+            direction = this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(50.0D)).subtract(this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(1D)));
         }else {
             direction = this.getHeadPos().add(this.viewHeadY().scale(50.0D)).subtract(this.getHeadPos().add(this.viewHeadY().scale(0.5D)));
         }
@@ -720,6 +720,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             if(!p_27584_.getAbilities().instabuild){
                 stack.shrink(1);
             }
+        }else {
+            this.doPlayerRide(p_27584_);
         }
         return super.mobInteract(p_27584_, p_27585_);
     }
@@ -880,7 +882,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     private void towerTick() {
         this.isShooting=true;
         if(this.tickCount%5==0 && !this.level().isClientSide){
-            BlockHitResult result = this.level().clip(new ClipContext(this.getHeadPos(),this.getControllingPassenger().getEyePosition().add(this.getControllingPassenger().getLookAngle().scale(30.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
+            BlockHitResult result = this.level().clip(new ClipContext(this.getHeadPos(),this.getHeadPos().add(this.getControllingPassenger().getLookAngle().scale(30.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
             for (TowerPart<?> part : this.towers){
                 BlockPos target = result.getBlockPos();
                 BulletEntity arrow = new BulletEntity(this.level());

@@ -47,7 +47,7 @@ public class BulletRenderer<T extends BulletEntity> extends EntityRenderer<T> {
         this.vertex(matrix4f, matrix3f, vertexconsumer, -7, -2, 2, 0.15625F, 0.3125F, 1, 0, 0, p_113844_);
         this.vertex(matrix4f, matrix3f, vertexconsumer, -7, -2, -2, 0.0F, 0.3125F, 1, 0, 0, p_113844_);
 
-        for(int j = 0; j < 2; ++j) {
+        for(int j = 0; j < 4; ++j) {
             p_113842_.mulPose(Axis.XP.rotationDegrees(90.0F));
             this.vertex(matrix4f, matrix3f, vertexconsumer, -8, -2, 0, 0.0F, 0.0F, 0, 1, 0, p_113844_);
             this.vertex(matrix4f, matrix3f, vertexconsumer, 8, -2, 0, 0.5F, 0.0F, 0, 1, 0, p_113844_);
