@@ -98,7 +98,7 @@ public class Events {
             event.setPitch(event.getPitch()); // igual
             event.setYaw(event.getYaw());     // igual
             if(!ray.isLaser() && !Minecraft.getInstance().options.getCameraType().isFirstPerson()){
-                Minecraft.getInstance().gameRenderer.getMainCamera().move(-25 * ray.getCamInterpolation(Minecraft.getInstance().getPartialTick()), 0, 0);
+                Minecraft.getInstance().gameRenderer.getMainCamera().move(-13 * ray.getCamInterpolation(Minecraft.getInstance().getPartialTick()), 0, 0);
             }
         }
     }

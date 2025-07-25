@@ -17,7 +17,7 @@ public class CVNEntityType {
     public static final RegistryObject<EntityType<MetalGearRayEntity>> RAY =
             ENTITY_TYPES.register("ray",
                     () -> EntityType.Builder.of(MetalGearRayEntity::new, MobCategory.MONSTER)
-                            .sized(1f, 1f)
+                            .sized(4f, 4f)
                             .clientTrackingRange(40)
                             .build(new ResourceLocation(MetalGearRayMod.MODID, "ray").toString()));
 

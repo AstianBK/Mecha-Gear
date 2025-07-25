@@ -143,10 +143,10 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 .add(Attributes.ARMOR,10.0D)
                 .add(Attributes.ARMOR_TOUGHNESS,5.0D)
                 .add(Attributes.FOLLOW_RANGE, 45.D)
-                .add(Attributes.MOVEMENT_SPEED, 0.1d)
+                .add(Attributes.MOVEMENT_SPEED, 0.13d)
                 .add(Attributes.ATTACK_DAMAGE,12.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE,1.0F)
-                .add(Attributes.JUMP_STRENGTH,0.42F)
+                .add(Attributes.JUMP_STRENGTH,0.43F)
                 .build();
 
     }
@@ -180,7 +180,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     protected void executeRidersJump(float p_251967_, Vec3 p_275627_) {
         double d0 = this.getAttributeValue(Attributes.JUMP_STRENGTH) * (double)this.getBlockJumpFactor() + (double)this.getJumpBoostPower();
-        this.addDeltaMovement(this.getLookAngle().multiply(1.0D, 0.0D, 1.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(4.4285F * p_251967_) * d0, 0.0D));
+        this.addDeltaMovement(this.getLookAngle().multiply(4.0D, 0.0D, 1.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(4.4285F * p_251967_) * d0, 0.0D));
         this.setIsJumping(true);
         this.hasImpulse = true;
     }
@@ -566,7 +566,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             }
         }else{
             if(this.isSprinting()){
-                this.knockBack(this.level().getEntities(this,this.body.getBoundingBox().inflate(1.2F),e->!this.is(e)),false);
+                this.knockBack(this.level().getEntities(this,this.body.getBoundingBox().inflate(0.1F),e->!this.is(e)),false);
             }
 
         }
@@ -655,7 +655,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         double d3 = entity.getZ() - d1;
         double d4 = Math.max(d2 * d2 + d3 * d3, 0.1D);
         entity.push(d2 / d4 * 16.0D,(double)0.2F, d3 / d4 * 16.0D);
-        entity.hurt(damageSources().mobAttack(this), 20.0F);
+        entity.hurt(damageSources().mobAttack(this), 0.1F);
         this.doEnchantDamageEffects(this, entity);
 
     }
@@ -1221,18 +1221,18 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             }
         }else if(MGKeybinds.attackKey3.getKey().getValue()==key){
             if(this.bladeOn()){
-                this.level().playSound(null,this, SoundEvents.PISTON_CONTRACT, SoundSource.NEUTRAL,2.0F,6.0F);
+                this.level().playSound(null,this, SoundEvents.PISTON_CONTRACT, SoundSource.NEUTRAL,2.0F,-2.0F);
             }else {
-                this.level().playSound(null,this, SoundEvents.PISTON_EXTEND, SoundSource.NEUTRAL,2.0F,6.0F);
+                this.level().playSound(null,this, SoundEvents.PISTON_EXTEND, SoundSource.NEUTRAL,2.0F,-2.0F);
             }
             this.setBladeOn(!this.bladeOn());
             this.level().broadcastEntityEvent(this,(byte) 16);
 
         }else {
             if(this.towerOn()){
-                this.level().playSound(null,this, SoundEvents.PISTON_CONTRACT, SoundSource.NEUTRAL,2.0F,1.0F);
+                this.level().playSound(null,this, SoundEvents.PISTON_CONTRACT, SoundSource.NEUTRAL,2.0F,-2.0F);
             }else {
-                this.level().playSound(null,this, SoundEvents.PISTON_EXTEND, SoundSource.NEUTRAL,2.0F,1.0F);
+                this.level().playSound(null,this, SoundEvents.PISTON_EXTEND, SoundSource.NEUTRAL,2.0F,-2.0F);
             }
             this.setTowerOn(!this.towerOn());
             this.level().broadcastEntityEvent(this,(byte) 15);
@@ -1257,7 +1257,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }
 
         player.nextContainerCounter();
-        player.connection.send(new ClientboundOpenScreenPacket(player.containerCounter, MenuType.GENERIC_9x6, Component.literal("Inventory")));
+        player.connection.send(new ClientboundOpenScreenPacket(player.containerCounter, MenuType.GENERIC_9x6, Component.literal("Ray Inventory")));
         player.containerMenu = ChestMenu.sixRows(player.containerCounter, player.getInventory(), p_9060_);
         player.initMenu(player.containerMenu);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerContainerEvent.Open(player, player.containerMenu));
