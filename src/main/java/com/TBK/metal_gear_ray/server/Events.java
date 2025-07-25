@@ -95,8 +95,8 @@ public class Events {
     public static void onCameraSetup(ViewportEvent.ComputeCameraAngles event) {
 
         if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle() instanceof MetalGearRayEntity ray){
-            event.setPitch(event.getPitch()); // igual
-            event.setYaw(event.getYaw());     // igual
+            event.setPitch(event.getPitch());
+            event.setYaw(event.getYaw());
             if(!ray.isLaser() && !Minecraft.getInstance().options.getCameraType().isFirstPerson()){
                 Minecraft.getInstance().gameRenderer.getMainCamera().move(-13 * ray.getCamInterpolation(Minecraft.getInstance().getPartialTick()), 0, 0);
             }
