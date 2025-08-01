@@ -1,0 +1,23 @@
+{
+  "blend": {
+    "func": "add",
+    "srcrgb": "src_alpha",
+    "dstrgb": "one_minus_src_alpha"
+  },
+  "vertex": "metal_gear_mod:interfaz",
+  "fragment": "metal_gear_mod:interfaz",
+  "samplers": [
+    { "name": "DiffuseSampler", "file": "metal_gear_mod:textures/gui/ray_overlay.png" },
+    { "name": "AlphaMask", "file": "metal_gear_mod:textures/gui/degra.png" }
+  ],
+  "attributes": ["Position", "UV0"],
+  "uniforms": [
+    {
+      "name": "GlobalAlpha",
+      "type": "float",
+      "count": 1,
+      "values": [ 1.0 ]
+    }
+  ],
+  "rendertype": "translucent"
+}

@@ -1,0 +1,7 @@
+
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "metal_gear_mod:item/ray_deployer"
+  }
+}

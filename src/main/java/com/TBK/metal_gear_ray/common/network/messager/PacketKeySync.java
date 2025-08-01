@@ -1,6 +1,8 @@
 package com.TBK.metal_gear_ray.common.network.messager;
 
+import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.api.IMecha;
+import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
@@ -8,6 +10,7 @@ import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ShieldItem;
@@ -42,7 +45,9 @@ public class PacketKeySync implements Packet<PacketListener> {
             if(player!=null ){
 
                 if(player.getVehicle()!=null){
-                    if(this.key == 2){
+                    if(this.key == 4){
+                        ((MetalGearRayEntity)player.getVehicle()).knockBack(player.level().getEntitiesOfClass(Entity.class,player.getVehicle().getBoundingBox().inflate(10.0F), e->!player.getVehicle().is(e)),false);
+                    } else if(this.key == 2){
                         player.getVehicle().setSprinting(true);
                     }else if(this.key == 3){
                         player.getVehicle().setSprinting(false);

@@ -5,6 +5,7 @@ import com.TBK.metal_gear_ray.client.renderer.MetalGearRayRenderer;
 import com.TBK.metal_gear_ray.common.entity.BulletEntity;
 import com.TBK.metal_gear_ray.common.network.PacketHandler;
 import com.TBK.metal_gear_ray.common.register.*;
+import com.TBK.metal_gear_ray.server.capability.MGCapability;
 import com.TBK.metal_gear_ray.server.world.BKBiomeSpawn;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
@@ -68,15 +69,13 @@ public class MetalGearRayMod
         CVNEntityType.ENTITY_TYPES.register(modEventBus);
         MGParticles.PARTICLE_TYPES.register(modEventBus);
         CVNSounds.SOUND_EVENTS.register(modEventBus);
-        final DeferredRegister<Codec<? extends BiomeModifier>> biomeModifiers = DeferredRegister.create(ForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS, MetalGearRayMod.MODID);
-        biomeModifiers.register(modEventBus);
-        biomeModifiers.register("metal_gear_archive_spawn", BKBiomeSpawn::makeCodec);
         CVNCreativeTabs.TABS.register(modEventBus);
         PacketHandler.registerMessages();
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT,()->()->{
             modEventBus.addListener(this::registerRenderers);
             modEventBus.addListener(this::onRegisterAdditionalModels);
         });
+        modEventBus.addListener(MGCapability::registerCapabilities);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 

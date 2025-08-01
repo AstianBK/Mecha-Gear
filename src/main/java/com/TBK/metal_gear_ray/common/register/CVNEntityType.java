@@ -18,7 +18,7 @@ public class CVNEntityType {
             ENTITY_TYPES.register("ray",
                     () -> EntityType.Builder.of(MetalGearRayEntity::new, MobCategory.MONSTER)
                             .sized(4f, 4f)
-                            .clientTrackingRange(40)
+                            .clientTrackingRange(80)
                             .build(new ResourceLocation(MetalGearRayMod.MODID, "ray").toString()));
 
     public static final RegistryObject<EntityType<BulletEntity>> BULLET =

@@ -4,8 +4,12 @@ package com.TBK.metal_gear_ray.server;
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.api.IMecha;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
+import com.TBK.metal_gear_ray.server.capability.ArsenalCapability;
+import com.TBK.metal_gear_ray.server.capability.MGCapability;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -15,6 +19,8 @@ import net.minecraftforge.client.event.ComputeFovModifierEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.ViewportEvent;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -24,7 +30,19 @@ import net.minecraftforge.fml.common.Mod;
 public class Events {
 
 
+    @SubscribeEvent
+    public static void attachEntityCapability(AttachCapabilitiesEvent<Entity> event) {
+        if(event.getObject() instanceof Player player){
+            ArsenalCapability oldCap = MGCapability.getEntityCap(event.getObject(), ArsenalCapability.class);
 
+            if (oldCap == null) {
+                ArsenalCapability.ArsenalPlayerProvider prov = new ArsenalCapability.ArsenalPlayerProvider();
+                ArsenalCapability cap=prov.getCapability(MGCapability.VAMPIRE_CAPABILITY).orElse(null);
+                cap.setPlayer(player);
+                event.addCapability(new ResourceLocation(MetalGearRayMod.MODID, "arsenal_cap"), prov);
+            }
+        }
+    }
     @SubscribeEvent
     public static void onUseItem(PlayerInteractEvent.RightClickItem event) {
         if(event.getItemStack().is(Items.STICK)){
@@ -103,7 +121,21 @@ public class Events {
         }
     }
 
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        if (!event.isWasDeath()) return; // si querés solo copiar en muerte
 
+        Player oldPlayer = event.getOriginal();
+        Player newPlayer = event.getEntity();
+
+        oldPlayer.reviveCaps();
+
+        oldPlayer.getCapability(MGCapability.VAMPIRE_CAPABILITY).ifPresent(oldCap -> {
+            newPlayer.getCapability(MGCapability.VAMPIRE_CAPABILITY).ifPresent(newCap -> {
+                newCap.copyFrom(oldCap);
+            });
+        });
+    }
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void renderEvent(RenderLivingEvent.Pre<?,?> event){

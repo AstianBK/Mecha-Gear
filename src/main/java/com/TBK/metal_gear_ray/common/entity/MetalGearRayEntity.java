@@ -5,8 +5,10 @@ import com.TBK.metal_gear_ray.common.api.IMecha;
 import com.TBK.metal_gear_ray.common.network.PacketHandler;
 import com.TBK.metal_gear_ray.common.network.messager.PacketActionRay;
 import com.TBK.metal_gear_ray.common.network.messager.PacketKeySync;
+import com.TBK.metal_gear_ray.common.register.CVNItems;
 import com.TBK.metal_gear_ray.common.register.CVNSounds;
 import com.TBK.metal_gear_ray.common.register.MGParticles;
+import com.TBK.metal_gear_ray.server.capability.ArsenalCapability;
 import com.TBK.metal_gear_ray.server.keybind.MGKeybinds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -20,6 +22,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.OldUsersConverter;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -32,8 +35,14 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.TargetGoal;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
@@ -44,6 +53,8 @@ import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.*;
 import net.minecraftforge.entity.PartEntity;
 import net.minecraftforge.fluids.FluidType;
@@ -52,7 +63,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class MetalGearRayEntity extends PathfinderMob implements ContainerListener, HasCustomInventoryScreen,PlayerRideableJumping, RiderShieldingMount, IMecha {
+public class MetalGearRayEntity extends PathfinderMob implements ContainerListener, HasCustomInventoryScreen,PlayerRideableJumping, RiderShieldingMount, IMecha,OwnableEntity {
     public static final EntityDataAccessor<Boolean> ATTACKING =
             SynchedEntityData.defineId(MetalGearRayEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> LASER =
@@ -62,12 +73,15 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             SynchedEntityData.defineId(MetalGearRayEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> BLADE_ON =
             SynchedEntityData.defineId(MetalGearRayEntity.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Optional<UUID>> OWNER_ID =
+            SynchedEntityData.defineId(MetalGearRayEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 
     public final ExplosionDamageCalculator damageCalculator = new ExplosionDamageCalculator();
     public AnimationState stomp = new AnimationState();
     public AnimationState meleeAttack = new AnimationState();
     public AnimationState idle = new AnimationState();
     public AnimationState in_water = new AnimationState();
+    public AnimationState is_air = new AnimationState();
     public AnimationState blade_on = new AnimationState();
     public AnimationState blade_off = new AnimationState();
     public AnimationState tower_on = new AnimationState();
@@ -105,7 +119,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     public int interpolationCamTimer0 = 0;
     protected SimpleContainer inventory;
     private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
-
+    private Vec3 positionOld = Vec3.ZERO;
+    protected static final EntityDataAccessor<Boolean> SITTING = SynchedEntityData.defineId(MetalGearRayEntity.class,
+            EntityDataSerializers.BOOLEAN);
 
     public MetalGearRayEntity(EntityType<? extends PathfinderMob> p_21368_, Level p_21369_) {
         super(p_21368_, p_21369_);
@@ -137,7 +153,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     public static AttributeSupplier setAttributes() {
-        return TamableAnimal.createMobAttributes()
+        return MetalGearRayEntity.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 200.0D)
                 .add(Attributes.ARMOR,10.0D)
                 .add(Attributes.ARMOR_TOUGHNESS,5.0D)
@@ -156,7 +172,14 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(3,new RayAttackGoal(this,2.0D,false));
-        this.targetSelector.addGoal(4,new NearestAttackableTargetGoal<>(this,LivingEntity.class,false));
+        this.targetSelector.addGoal(4,new NearestAttackableTargetGoal<>(this,LivingEntity.class,false){
+            @Override
+            public boolean canUse() {
+                return super.canUse() && MetalGearRayEntity.this.getOwnerUUID()!=null;
+            }
+        });
+        this.targetSelector.addGoal(4,new OwnerHurtTargetMetalGearGoal(this));
+        this.goalSelector.addGoal(2, new FollowOwnerGoal(this));
     }
 
     public Vec3 getHeadPos(){
@@ -181,7 +204,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     protected void executeRidersJump(float p_251967_, Vec3 p_275627_) {
         double d0 = this.getAttributeValue(Attributes.JUMP_STRENGTH) * (double)this.getBlockJumpFactor() + (double)this.getJumpBoostPower();
-        this.addDeltaMovement(this.getLookAngle().multiply(4.0D, 0.0D, 1.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(4.4285F * p_251967_) * d0, 0.0D));
+        this.addDeltaMovement(this.getLookAngle().multiply(4.0D, 0.0D, 4.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(4.4285F * p_251967_) * d0, 0.0D));
         this.setIsJumping(true);
         this.hasImpulse = true;
     }
@@ -193,6 +216,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 if(this.isJumping()){
                     if(this.level().isClientSide){
                         this.applyRadius(10,0.2F,this.position());
+                        PacketHandler.sendToServer(new PacketKeySync(4));
                     }
                 }
                 this.setIsJumping(false);
@@ -206,6 +230,12 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     }
 
+    public void setSitting(boolean isSitting){
+        this.entityData.set(SITTING,isSitting);
+    }
+    public boolean isSitting(){
+        return this.entityData.get(SITTING);
+    }
     public void setIsJumping(boolean isJumping){
         this.isJumping = isJumping;
     }
@@ -231,16 +261,17 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     @Override
     public void tick() {
         super.tick();
-
-        this.refreshDimensions();
-
-        if(this.isJumping()){
-            if(this.onGround()){
-                this.pushEntities(this.level().getEntitiesOfClass(LivingEntity.class,this.body.getBoundingBox().inflate(10)));
-                this.isJumping=false;
+        if (!this.level().isClientSide) {
+            if (this.tickCount % 5 == 0) {
+                if (this.positionOld != null && this.positionOld.closerThan(this.position(), 0.01)) {
+                    this.setSprinting(false);
+                }
+                this.positionOld = this.position();
             }
         }
-        if(this.lastHurtByPlayerTime + 250 >this.tickCount || this.getLastHurtMobTimestamp()+250>this.tickCount){
+
+
+        if(this.lastHurtByPlayerTime + 250 > this.tickCount || this.getLastHurtMobTimestamp()+250>this.tickCount){
             if(this.getMaxHealth()!=this.getHealth()){
                 if(this.tickCount%100==0){
                     if(!this.level().isClientSide){
@@ -250,6 +281,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 }
             }
         }
+
         if(!this.isVehicle()){
             if(this.level().getEntities(this,this.body.getBoundingBox().inflate(3.0F),EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(e->!this.is(e))).isEmpty()){
                 this.setTowerOn(false);
@@ -343,12 +375,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 this.towers[l].zOld = avec3[l].z;
             }
 
-            if(!this.level().isClientSide){
-                if(this.isShooting && this.resetTowerSoundTimer++>15){
-                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT.get(),SoundSource.NEUTRAL,1.0F,1.0F);
-                    this.resetTowerSoundTimer=0;
-                }
-            }
 
             if(!this.isVehicle()){
                 this.checkTick();
@@ -474,8 +500,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                             }
                         }
                     }
-                }
 
+                }
                 if(this.laserPosition!=null){
                     this.setPos(this.position());
 
@@ -591,7 +617,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
         if (this.horizontalCollision && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.level(), this)) {
             boolean flag = false;
-            AABB aabb = this.body.getBoundingBox().inflate(0.2D);
+            AABB aabb = this.body.getBoundingBox().inflate(2D);
 
             for(BlockPos blockpos : BlockPos.betweenClosed(Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ), Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
                 BlockState blockstate = this.level().getBlockState(blockpos);
@@ -599,10 +625,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 if (block instanceof LeavesBlock || blockstate.is(BlockTags.LOGS)) {
                     flag = this.level().destroyBlock(blockpos, true, this) || flag;
                 }
-            }
-
-            if (!flag && this.onGround()) {
-                this.jumpFromGround();
             }
         }
 
@@ -669,7 +691,13 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     protected void checkFallDamage(double p_20990_, boolean p_20991_, BlockState p_20992_, BlockPos p_20993_) {
 
     }
-    private void knockBack(List<Entity> p_31132_, boolean up) {
+
+    @Override
+    public boolean fireImmune() {
+        return true;
+    }
+
+    public void knockBack(List<Entity> p_31132_, boolean up) {
         double d0 = (this.getBoundingBox().minX + this.getBoundingBox().maxX) / 2.0D;
         double d1 = (this.getBoundingBox().minZ + this.getBoundingBox().maxZ) / 2.0D;
 
@@ -749,8 +777,31 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             if(!p_27584_.getAbilities().instabuild){
                 stack.shrink(1);
             }
-        }else {
-            this.doPlayerRide(p_27584_);
+            return InteractionResult.SUCCESS;
+        }
+        if(stack.isEmpty()){
+            this.setSitting(!this.isSitting());
+            if(p_27584_.level().isClientSide){
+                p_27584_.displayClientMessage(Component.translatable("ray."+(this.isSitting() ? "sitting" : "follow")),true);
+            }
+            return InteractionResult.SUCCESS;
+
+        }
+        if(this.getOwnerUUID()!=null){
+            if(stack.is(CVNItems.DEPLOYER.get()) && this.getOwnerUUID().equals(p_27584_.getUUID())){
+                ArsenalCapability arsenal = ArsenalCapability.get(p_27584_);
+                if(arsenal!=null && arsenal.rayActive){
+                    if(p_27584_.level().isClientSide){
+                        p_27584_.displayClientMessage(Component.translatable("ray.save"),true);
+                    }else {
+                        arsenal.saveRay(this,p_27584_);
+                    }
+                    return InteractionResult.SUCCESS;
+                }
+            }
+            if(this.getOwnerUUID().equals(p_27584_.getUUID())){
+                this.doPlayerRide(p_27584_);
+            }
         }
         return super.mobInteract(p_27584_, p_27585_);
     }
@@ -781,12 +832,18 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     @Override
+    public void checkDespawn() {
+
+    }
+
+    @Override
     public boolean isSprinting() {
         return super.isSprinting();
     }
 
     public void travel(Vec3 pTravelVector) {
         LivingEntity livingentity = (LivingEntity) this.getControllingPassenger();
+
         if (this.isAlive()) {
             if (this.isVehicle() && livingentity!=null && !this.isImmobile()) {
                 if(!this.isLaser()){
@@ -862,11 +919,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     @Override
-    public boolean isInWater() {
-        return super.isInWater();
-    }
-
-    @Override
     public boolean is(Entity p_20356_) {
         for (int j=0 ; j<this.getParts().length ; j++){
             if(this.getParts()[j]==p_20356_){
@@ -903,6 +955,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                     arrow.setPos(part.position());
                     arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                     this.level().addFreshEntity(arrow);
+                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,1.0F,3.0F + this.level().random.nextFloat()*4);
                 }
                 this.isShooting=true;
             }
@@ -921,6 +974,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 arrow.setPos(part.position());
                 arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                 this.level().addFreshEntity(arrow);
+                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,1.0F,3.0F + this.level().random.nextFloat()*4);
+
             }
         }
     }
@@ -943,6 +998,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     private void tickPart(TowerPart<?> p_31116_, double p_31117_, double p_31118_, double p_31119_) {
         p_31116_.setPos(this.getX() + p_31117_, this.getY() + p_31118_, this.getZ() + p_31119_);
     }
+
     public void upEntities(List<LivingEntity> list){
         for (LivingEntity livingEntity : list){
             if(!this.is(livingEntity) && livingEntity.hurt(this.damageSources().generic(),20.0F) ){
@@ -965,17 +1021,14 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
     protected void updateWalkAnimation(float p_268362_) {
         float f;
-        if (this.getPose() == Pose.STANDING && !this.isInWater()) {
+        if (this.getPose() == Pose.STANDING && !this.isInWater() && this.onGround()) {
             f = Math.min(p_268362_ * 6.0F, 1.0F);
         } else {
-            this.idleAnimationTimeout=1;
-            this.idle.stop();
             f = 0.0F;
         }
 
         this.walkAnimation.update(f, 0.2F);
     }
-
 
     public void recreateFromPacket(ClientboundAddEntityPacket p_218825_) {
         super.recreateFromPacket(p_218825_);
@@ -1017,15 +1070,19 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 --this.swimAnimationTimeout;
             }
         }else {
-            if (this.idleAnimationTimeout <= 0) {
-                this.idleAnimationTimeout = 80;
-                this.in_water.stop();
-                this.stomp.stop();
-                this.meleeAttack.stop();
-                this.idle.start(this.tickCount);
-                this.swimAnimationTimeout=0;
-            } else {
-                --this.idleAnimationTimeout;
+            if(this.onGround()){
+                if (this.idleAnimationTimeout <= 0) {
+                    this.idleAnimationTimeout = 80;
+                    this.in_water.stop();
+                    this.stomp.stop();
+                    this.meleeAttack.stop();
+                    this.idle.start(this.tickCount);
+                    this.swimAnimationTimeout=0;
+                } else {
+                    --this.idleAnimationTimeout;
+                }
+            }else {
+                this.idle.stop();
             }
         }
 
@@ -1048,11 +1105,17 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==this){
             if(Minecraft.getInstance().options.keySprint.isDown()){
                 PacketHandler.sendToServer(new PacketKeySync(2));
-            }else {
-                PacketHandler.sendToServer(new PacketKeySync(3));
             }
         }
+
+        this.is_air.animateWhen(!this.onGround() && !this.isInWater(),this.tickCount);
     }
+
+
+    public void setOwnerId(UUID uuid){
+        this.entityData.set(OWNER_ID,Optional.ofNullable(uuid));
+    }
+
     private void setIsAttacking(boolean b) {
         this.entityData.set(ATTACKING,b);
     }
@@ -1076,6 +1139,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
+        this.entityData.define(OWNER_ID,Optional.empty());
+        this.entityData.define(SITTING,false);
         this.entityData.define(ATTACKING,false);
         this.entityData.define(BLADE_ON,false);
         this.entityData.define(TOWER_ON,false);
@@ -1083,12 +1148,25 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     @Override
+    protected boolean isImmobile() {
+        return super.isImmobile() || this.isSitting();
+    }
+
+    private boolean isOrderedToSit() {
+        return this.isSitting();
+    }
+
+    @Override
     public void addAdditionalSaveData(CompoundTag p_21484_) {
         super.addAdditionalSaveData(p_21484_);
-        ListTag listtag = new ListTag();
+        if(this.getOwnerUUID()!=null){
+            p_21484_.putUUID("Owner",this.getOwnerUUID());
+        }
+        p_21484_.putBoolean("sitting",this.isSitting());
 
+        ListTag listtag = new ListTag();
         if(this.inventory!=null){
-            for(int i = 2; i < this.inventory.getContainerSize(); ++i) {
+            for(int i = 0; i < this.inventory.getContainerSize(); ++i) {
                 ItemStack itemstack = this.inventory.getItem(i);
                 if (!itemstack.isEmpty()) {
                     CompoundTag compoundtag = new CompoundTag();
@@ -1105,6 +1183,22 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     @Override
     public void readAdditionalSaveData(CompoundTag p_21450_) {
         super.readAdditionalSaveData(p_21450_);
+        UUID uuid;
+        if (p_21450_.hasUUID("Owner")) {
+            uuid = p_21450_.getUUID("Owner");
+        } else {
+            String s = p_21450_.getString("Owner");
+            uuid = OldUsersConverter.convertMobOwnerIfNecessary(this.getServer(), s);
+        }
+
+        if (uuid != null) {
+            try {
+                this.setOwnerId(uuid);
+            } catch (Throwable ignored) {
+
+            }
+        }
+        this.setSitting(p_21450_.getBoolean("sitting"));
         if(this.inventory==null){
             this.createInventory();
         }
@@ -1114,7 +1208,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             for(int i = 0; i < listtag.size(); ++i) {
                 CompoundTag compoundtag = listtag.getCompound(i);
                 int j = compoundtag.getByte("Slot") & 255;
-                if (j >= 2 && j < this.inventory.getContainerSize()) {
+                if (j < this.inventory.getContainerSize()) {
                     this.inventory.setItem(j, ItemStack.of(compoundtag));
                 }
             }
@@ -1343,6 +1437,48 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             oldHandler.invalidate();
         }
     }
+
+    @Nullable
+    @Override
+    public UUID getOwnerUUID() {
+        return this.entityData.get(OWNER_ID).orElse(null);
+    }
+    public class OwnerHurtTargetMetalGearGoal extends TargetGoal {
+        private final MetalGearRayEntity tameAnimal;
+        private LivingEntity ownerLastHurt;
+        private int timestamp;
+
+        public OwnerHurtTargetMetalGearGoal(MetalGearRayEntity p_26114_) {
+            super(p_26114_, false);
+            this.tameAnimal = p_26114_;
+            this.setFlags(EnumSet.of(Goal.Flag.TARGET));
+        }
+
+        public boolean canUse() {
+            if (this.tameAnimal.getOwnerUUID()!=null) {
+                LivingEntity livingentity = this.tameAnimal.getOwner();
+                if (livingentity == null) {
+                    return false;
+                } else {
+                    this.ownerLastHurt = livingentity.getLastHurtMob();
+                    int i = livingentity.getLastHurtMobTimestamp();
+                    return i != this.timestamp && this.canAttack(this.ownerLastHurt, TargetingConditions.DEFAULT);
+                }
+            } else {
+                return false;
+            }
+        }
+
+        public void start() {
+            this.mob.setTarget(this.ownerLastHurt);
+            LivingEntity livingentity = this.tameAnimal.getOwner();
+            if (livingentity != null) {
+                this.timestamp = livingentity.getLastHurtMobTimestamp();
+            }
+
+            super.start();
+        }
+    }
     class RayAttackGoal extends MeleeAttackGoal {
         public StratAttack currentAttack = StratAttack.STOMP;
         public int nextTimerStrat = 0;
@@ -1360,7 +1496,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
         @Override
         public boolean canUse() {
-            return !MetalGearRayEntity.this.isVehicle() && super.canUse() && !MetalGearRayEntity.this.isLaser();
+            return !MetalGearRayEntity.this.isVehicle() && super.canUse() && !MetalGearRayEntity.this.isVehicle() && !MetalGearRayEntity.this.isLaser();
         }
 
         @Override
@@ -1414,6 +1550,134 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         enum StratAttack{
             LASER,
             STOMP;
+        }
+    }
+
+    public static class FollowOwnerGoal extends Goal {
+        private final MetalGearRayEntity tamable;
+        private LivingEntity owner;
+        private final LevelReader level;
+        private final double speedModifier;
+        private final PathNavigation navigation;
+        private int timeToRecalcPath;
+        private final float stopDistance;
+        private final float startDistance;
+        private float oldWaterCost;
+        private final boolean canFly;
+
+        public FollowOwnerGoal(MetalGearRayEntity p_25294_) {
+            this.tamable = p_25294_;
+            this.level = p_25294_.level();
+            this.speedModifier = 1.0F;
+            this.navigation = p_25294_.getNavigation();
+            this.startDistance = 20;
+            this.stopDistance = 7;
+            this.canFly = false;
+            this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+            if (!(p_25294_.getNavigation() instanceof GroundPathNavigation) && !(p_25294_.getNavigation() instanceof FlyingPathNavigation)) {
+                throw new IllegalArgumentException("Unsupported mob type for FollowOwnerGoal");
+            }
+        }
+
+        public boolean canUse() {
+            LivingEntity livingentity = this.tamable.getOwner();
+            if (livingentity == null) {
+                return false;
+            } else if (livingentity.isSpectator()) {
+                return false;
+            } else if (this.unableToMove()) {
+                return false;
+            } else if (this.tamable.distanceToSqr(livingentity) < (double)(this.startDistance * this.startDistance)) {
+                return false;
+            } else {
+                this.owner = livingentity;
+                return true;
+            }
+        }
+
+        public boolean canContinueToUse() {
+            if (this.navigation.isDone()) {
+                return false;
+            } else if (this.unableToMove()) {
+                return false;
+            } else {
+                return !(this.tamable.distanceToSqr(this.owner) <= (double)(this.stopDistance * this.stopDistance));
+            }
+        }
+
+        private boolean unableToMove() {
+            return this.tamable.isOrderedToSit() || this.tamable.isPassenger() || this.tamable.isLeashed();
+        }
+
+        public void start() {
+            this.timeToRecalcPath = 0;
+            this.oldWaterCost = this.tamable.getPathfindingMalus(BlockPathTypes.WATER);
+            this.tamable.setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
+        }
+
+        public void stop() {
+            this.owner = null;
+            this.navigation.stop();
+            this.tamable.setPathfindingMalus(BlockPathTypes.WATER, this.oldWaterCost);
+        }
+
+        public void tick() {
+            this.tamable.getLookControl().setLookAt(this.owner, 10.0F, (float)this.tamable.getMaxHeadXRot());
+            if (--this.timeToRecalcPath <= 0) {
+                this.timeToRecalcPath = this.adjustedTickDelay(10);
+                if (this.tamable.distanceToSqr(this.owner) >= 900.0D) {
+                    this.teleportToOwner();
+                } else {
+                    this.navigation.moveTo(this.owner, this.speedModifier);
+                }
+
+            }
+        }
+
+        private void teleportToOwner() {
+            BlockPos blockpos = this.owner.blockPosition();
+
+            for(int i = 0; i < 10; ++i) {
+                int j = this.randomIntInclusive(-3, 3);
+                int k = this.randomIntInclusive(-1, 1);
+                int l = this.randomIntInclusive(-3, 3);
+                boolean flag = this.maybeTeleportTo(blockpos.getX() + j, blockpos.getY() + k, blockpos.getZ() + l);
+                if (flag) {
+                    return;
+                }
+            }
+
+        }
+
+        private boolean maybeTeleportTo(int p_25304_, int p_25305_, int p_25306_) {
+            if (Math.abs((double)p_25304_ - this.owner.getX()) < 2.0D && Math.abs((double)p_25306_ - this.owner.getZ()) < 2.0D) {
+                return false;
+            } else if (!this.canTeleportTo(new BlockPos(p_25304_, p_25305_, p_25306_))) {
+                return false;
+            } else {
+                this.tamable.moveTo((double)p_25304_ + 0.5D, (double)p_25305_, (double)p_25306_ + 0.5D, this.tamable.getYRot(), this.tamable.getXRot());
+                this.navigation.stop();
+                return true;
+            }
+        }
+
+        private boolean canTeleportTo(BlockPos p_25308_) {
+            BlockPathTypes blockpathtypes = WalkNodeEvaluator.getBlockPathTypeStatic(this.level, p_25308_.mutable());
+            if (blockpathtypes != BlockPathTypes.WALKABLE) {
+                return false;
+            } else {
+                BlockState blockstate = this.level.getBlockState(p_25308_.below());
+                if (!this.canFly && blockstate.getBlock() instanceof LeavesBlock) {
+                    return false;
+                } else {
+                    BlockPos blockpos = p_25308_.subtract(this.tamable.blockPosition());
+                    return this.level.noCollision(this.tamable, this.tamable.getBoundingBox().move(blockpos));
+                }
+            }
+        }
+
+        private int randomIntInclusive(int p_25301_, int p_25302_) {
+            return this.tamable.getRandom().nextInt(p_25302_ - p_25301_ + 1) + p_25301_;
         }
     }
 

@@ -3,27 +3,31 @@ package com.TBK.metal_gear_ray.client.gui;
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.api.IMecha;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
+import com.TBK.metal_gear_ray.common.register.CVNRenderType;
+import com.TBK.metal_gear_ray.common.register.ShaderLoader;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 
 import java.util.Arrays;
 import java.util.Comparator;
 
 public class ActionGui implements IGuiOverlay {
-
     @Override
     public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
         Minecraft mc = Minecraft.getInstance();
@@ -34,6 +38,7 @@ public class ActionGui implements IGuiOverlay {
                 guiGraphics.pose().pushPose();
                 float cc = (((float)netheriteForge.cooldownLaser)/50.0F);
                 printOverlay(guiGraphics,getGuiTextures(),screenWidth,screenHeight);
+
                 if(netheriteForge.bladeOn()){
                     printOverlay(guiGraphics,getBladeState(),screenWidth,screenHeight);
                 }
@@ -48,26 +53,20 @@ public class ActionGui implements IGuiOverlay {
         }
     }
     public void printOverlayPercent(GuiGraphics guiGraphics, ResourceLocation resourceLocation, int screenWidth, int screenHeight, float percentHeight) {
-        int originalX = 0;
-        int originalY = 0;
+        float scale = 0.33f;
         int spriteWidth = 103;
         int spriteHeight = 101;
 
-        float drawX = (float) (( 406 + MetalGearRayMod.x + screenWidth / 2f));
-        float drawY = (float) (( 266 + MetalGearRayMod.y + screenHeight));
+        int drawX = (screenWidth / 2 - (int)(spriteWidth * scale / 2));
+        int drawY = (screenHeight / 2 - (int)(spriteHeight * scale / 2)) +67;
 
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().scale(1.0f / 3.0F, 1.0F / 3.0F, 1.0F);
-
-        guiGraphics.blit(resourceLocation,
-                (int) drawX, (int) drawY,
-                originalX, originalY,
-                spriteWidth, Mth.floor(spriteHeight*percentHeight),
-                spriteWidth, spriteHeight
-        );
-
+        guiGraphics.pose().translate(drawX, drawY, 0);
+        guiGraphics.pose().scale(scale, scale, 1);
+        guiGraphics.blit(resourceLocation, 0, 0,0,0,spriteWidth,  Mth.ceil(spriteHeight*percentHeight), spriteWidth, spriteHeight);
         guiGraphics.pose().popPose();
     }
+
     public void printOverlay(GuiGraphics guiGraphics,ResourceLocation resourceLocation,int screenWidth,int screenHeight){
         guiGraphics.pose().pushPose();
         RenderSystem.disableDepthTest();

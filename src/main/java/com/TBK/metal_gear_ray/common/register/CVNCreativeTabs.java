@@ -13,10 +13,10 @@ public class CVNCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MetalGearRayMod.MODID);
 
     public static final RegistryObject<CreativeModeTab> BK_MOBS_TAB = TABS.register(MetalGearRayMod.MODID,()-> CreativeModeTab.builder()
-            .icon(()->new ItemStack(Items.BOOK))
+            .icon(()->new ItemStack(CVNItems.DEPLOYER.get()))
             .title(Component.translatable("itemGroup.witch_archive"))
             .displayItems((s,a)-> {
-                
+                a.accept(new ItemStack(CVNItems.DEPLOYER.get()));
             })
             .build());
 }
