@@ -435,8 +435,6 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		this.animate(entity.idle,MetalGearRayAnim.idlelegs,ageInTicks,1.0F);
 		this.animate(entity.idle,MetalGearRayAnim.idletail,ageInTicks,1.0F);
 
-		this.animate(entity.in_water,MetalGearRayAnim.swim,ageInTicks,1.0F);
-		this.animate(entity.is_air,MetalGearRayAnim.air,ageInTicks,1.0F);
 
 
 		if(!(limbSwingAmount > -0.15F && limbSwingAmount < 0.15F)){
@@ -470,8 +468,10 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		this.animate(entity.laser,MetalGearRayAnim.lazerloop,ageInTicks,1.0F);
 
 		if(entity.isInWater()){
-			this.root().y= (float) (-12.0F);
+			this.root().y = (float) (-12.0F);
 		}
+		this.animate(entity.in_water,MetalGearRayAnim.swim,ageInTicks,1.0F);
+		this.animate(entity.is_air,MetalGearRayAnim.air,ageInTicks,1.0F);
 
 		if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==entity && Minecraft.getInstance().options.getCameraType().isFirstPerson()){
 			this.Neck.visible=false;
