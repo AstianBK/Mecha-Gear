@@ -120,8 +120,11 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     protected SimpleContainer inventory;
     private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
     private Vec3 positionOld = Vec3.ZERO;
+    private float lastStepProgress = 0.0f;
+
     protected static final EntityDataAccessor<Boolean> SITTING = SynchedEntityData.defineId(MetalGearRayEntity.class,
             EntityDataSerializers.BOOLEAN);
+    private int lastCycle = 0;
 
     public MetalGearRayEntity(EntityType<? extends PathfinderMob> p_21368_, Level p_21369_) {
         super(p_21368_, p_21369_);
@@ -172,12 +175,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(3,new RayAttackGoal(this,2.0D,false));
-        this.targetSelector.addGoal(4,new NearestAttackableTargetGoal<>(this,LivingEntity.class,false){
-            @Override
-            public boolean canUse() {
-                return super.canUse() && MetalGearRayEntity.this.getOwnerUUID()!=null;
-            }
-        });
         this.targetSelector.addGoal(4,new OwnerHurtTargetMetalGearGoal(this));
         this.goalSelector.addGoal(2, new FollowOwnerGoal(this));
     }
@@ -558,7 +555,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                     }
                 }
             }else {
-                if(this.attackTimer == 2){
+                if(this.attackTimer == 5){
                     if(this.level().isClientSide){
                         this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_STOMP.get(),SoundSource.NEUTRAL,2.0F,1.0F,false);
                         Map<BlockPos,Integer> posSet = new HashMap<>();
@@ -598,6 +595,27 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         this.rotHeadX0 = this.rotHeadX;
 
         this.interpolationCamTimer0 = this.interpolationCamTimer;
+        float speed = walkAnimation.speed();
+        float position = walkAnimation.position();
+        int currentCycle = (int) Math.floor(position);
+        float currentProgress = position % 1.0F;
+        float lastProgress = lastStepProgress %1.0F;
+
+        MetalGearRayMod.LOGGER.debug("Step position actual" + position + " last speed "+speed);
+
+        MetalGearRayMod.LOGGER.debug("Step progeso actual" + currentProgress + " last progress"+this.lastStepProgress);
+        if (currentCycle > lastCycle || currentProgress > lastProgress) {
+            if (currentProgress == 0.473) {
+                this.playSound(CVNSounds.RAY_FOOTSTEP.get(),10F, 1.0F);
+            }
+            if (currentProgress == 0.946) {
+                MetalGearRayMod.LOGGER.debug("Step2 progeso actual" + currentProgress + " last progress"+this.lastStepProgress);
+                this.playSound(CVNSounds.RAY_FOOTSTEP.get(),10F, 1.0F);
+            }
+        }
+
+        lastCycle = currentCycle;
+        lastStepProgress = currentProgress;
 
 
         if(this.level().isClientSide){
@@ -944,18 +962,16 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     private void checkTick() {
         this.isShooting=false;
-        List<LivingEntity> list = this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(40.0D),EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(e->!this.is(e)));
         for (TowerPart<?> part : this.towers){
-            Optional<LivingEntity> optional = list.stream().findAny();
-            if(optional.isPresent() && this.tickCount%5==0){
+            LivingEntity target = this.getTarget();
+            if(target!=null && this.tickCount%5==0){
                 if(!this.level().isClientSide){
-                    LivingEntity target = optional.get();
                     BulletEntity arrow = new BulletEntity(this.level());
                     arrow.setOwner(this);
                     arrow.setPos(part.position());
                     arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                     this.level().addFreshEntity(arrow);
-                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,1.0F,3.0F + this.level().random.nextFloat()*4);
+                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT2.get(),SoundSource.NEUTRAL,10.0F,3.0F + this.level().random.nextFloat()*4);
                 }
                 this.isShooting=true;
             }
@@ -974,7 +990,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 arrow.setPos(part.position());
                 arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                 this.level().addFreshEntity(arrow);
-                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,1.0F,3.0F + this.level().random.nextFloat()*4);
+                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,10.0F,3.0F + this.level().random.nextFloat()*4);
 
             }
         }
@@ -992,7 +1008,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     @Override
     protected void playStepSound(BlockPos p_20135_, BlockState p_20136_) {
-        this.playSound(CVNSounds.RAY_FOOTSTEP.get(),0.5F, 1.0F);
+
     }
 
     private void tickPart(TowerPart<?> p_31116_, double p_31117_, double p_31118_, double p_31119_) {
@@ -1058,6 +1074,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     public void clientTick(){
+        // En tu clase de entidad o su animador
         if(this.isInWater()){
             if (this.swimAnimationTimeout <= 0) {
                 this.swimAnimationTimeout = 35;
@@ -1149,7 +1166,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     @Override
     protected boolean isImmobile() {
-        return super.isImmobile() || this.isSitting();
+        return super.isImmobile() || this.isSitting() || this.isAttacking();
     }
 
     private boolean isOrderedToSit() {
@@ -1298,7 +1315,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     @Override
     public void handleStartJump(int p_21695_) {
-        this.playSound(CVNSounds.RAY_JUMP.get(), 1.0F, 1.0F);
+        this.playSound(CVNSounds.RAY_JUMP.get(), 30.0F, 1.0F);
     }
 
     @Override
@@ -1568,7 +1585,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         public FollowOwnerGoal(MetalGearRayEntity p_25294_) {
             this.tamable = p_25294_;
             this.level = p_25294_.level();
-            this.speedModifier = 1.0F;
+            this.speedModifier = 2.0F;
             this.navigation = p_25294_.getNavigation();
             this.startDistance = 20;
             this.stopDistance = 7;
