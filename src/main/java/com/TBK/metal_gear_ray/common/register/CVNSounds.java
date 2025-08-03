@@ -39,8 +39,11 @@ public class CVNSounds {
     public static final RegistryObject<SoundEvent> RAY_TURRET_SHOOT4 =
             registerSoundEvent("ray_turret_shoot4");
 
-    public static final RegistryObject<SoundEvent> RAY_FOOTSTEP =
-            registerSoundEvent("ray_footstep");
+    public static final RegistryObject<SoundEvent> RAY_FOOTSTEP1 =
+            registerSoundEvent("ray_footstep1");
+
+    public static final RegistryObject<SoundEvent> RAY_FOOTSTEP2 =
+            registerSoundEvent("ray_footstep2");
 
     public static final RegistryObject<SoundEvent> RAY_JUMP =
             registerSoundEvent("ray_jump");
