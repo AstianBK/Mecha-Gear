@@ -59,7 +59,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
             }
             Vec3 origin = p_115468_.getHeadPos();
             Vec3 end = p_115468_.laserPosition;
-            return p_115469_.isVisible(new AABB(origin.x,origin.y,origin.z,end.x,end.y,end.z));
+            return end!=null ? p_115469_.isVisible(new AABB(origin.x,origin.y,origin.z,end.x,end.y,end.z)) : false;
         }
     }
 
