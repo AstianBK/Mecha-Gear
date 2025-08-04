@@ -1,6 +1,5 @@
 package com.TBK.metal_gear_ray.common.entity;
 
-import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.client.animations.MetalGearRayAnim;
 import com.TBK.metal_gear_ray.common.api.IMecha;
 import com.TBK.metal_gear_ray.common.network.PacketHandler;
@@ -14,6 +13,7 @@ import com.TBK.metal_gear_ray.server.keybind.MGKeybinds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.animation.AnimationDefinition;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -184,7 +184,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         super.registerGoals();
         this.goalSelector.addGoal(3,new RayAttackGoal(this,2.0D,false));
         this.targetSelector.addGoal(4, new OwnerHurtTargetMetalGearGoal(this));
-        this.goalSelector.addGoal(2, new FollowOwnerGoal(this));
+        this.goalSelector.addGoal(6, new FollowOwnerGoal(this));
     }
 
     public Vec3 getHeadPos(){
@@ -243,8 +243,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                                     if(canSummon){
                                         distance = Mth.clamp((12.0F/entityHitDistance),0.0F,1.0f);
                                         posSet.put(new BlockPos(pos2.getX(), pos2.getY(), pos2.getZ()), (int) (distance));
-                                        Minecraft.getInstance().particleEngine.destroy(pos2.above(),this.level().getBlockState(pos2));
-                                    }
+                                        for(int j=0;j<this.level().random.nextInt(5,10);j++){
+                                            Minecraft.getInstance().particleEngine.crack(pos2, Direction.UP);
+                                        }                                 }
                                 }
                             }
                         }
@@ -382,7 +383,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
         if(this.level().isClientSide){
             this.clientTick();
-            this.tickStep();
         }else{
             this.serverTick();
         }
@@ -465,21 +465,11 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             this.getNavigation().stop();
             if(this.isVehicle()){
                 if(this.tickCount%2 == 0 && this.getControllingPassenger()!=null){
-                    BlockHitResult blockEnd = this.level().clip(new ClipContext(this.getHeadPos(),this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F)- 7.0F,this.getControllingPassenger().getYHeadRot()).scale(50.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
-                    List<EntityHitResult> hits = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(),this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F)- 7.0F,this.getControllingPassenger().getYHeadRot()).scale(50.0D)),this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
-                    if(hits!=null){
-                        for (EntityHitResult hit : hits){
-                            if(hit.getEntity() instanceof LivingEntity){
-                                LivingEntity entity = (LivingEntity) hit.getEntity();
-                                if(entity.hurt(this.damageSources().generic(),4.0F)){
-                                    entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,3,10));
-                                }
-                            }
-                        }
-                    }
+                    Vec3 endBeam =this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F)- 7.0F,this.getControllingPassenger().getYHeadRot()).scale(50.0D));
+                    BlockHitResult blockEnd = this.level().clip(new ClipContext(this.getHeadPos(),endBeam, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
                     if(!level().getBlockState(blockEnd.getBlockPos()).isAir()){
                         BlockPos end = blockEnd.getBlockPos();
-
+                        this.laserPosition = end.getCenter();
                         if(this.level().isClientSide){
                             for (int i = 0 ; i<3 ; i++){
                                 this.level().addParticle(MGParticles.BEAM_EXPLOSION.get(),end.getX()+this.random.nextInt(-2,2),end.getY()+this.random.nextInt(0,2),end.getZ()+this.random.nextInt(-2,2),0.0F,0.0F,0.0F);
@@ -487,16 +477,15 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                         }else {
                             this.createExplosion(end);
                         }
+                    }else {
+                        this.laserPosition = endBeam;
                     }
-                }
-            }else {
-                if(this.tickCount%2 == 0){
-                    BlockHitResult blockEnd = this.level().clip(new ClipContext(this.getHeadPos(),this.getHeadPos().add(this.viewHeadY().scale(50.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
-                    List<EntityHitResult> hits = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(),this.getHeadPos().add(this.viewHeadY().scale(50.0D)),this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
+                    List<EntityHitResult> hits = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(),this.laserPosition,this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
                     if(hits!=null){
                         for (EntityHitResult hit : hits){
                             if(hit.getEntity() instanceof LivingEntity){
                                 LivingEntity entity = (LivingEntity) hit.getEntity();
+                                entity.invulnerableTime=0;
                                 if(entity.hurt(this.damageSources().generic(),4.0F)){
                                     entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,3,10));
                                     entity.setSecondsOnFire(3);
@@ -504,9 +493,15 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                             }
                         }
                     }
+
+                }
+            }else {
+                if(this.tickCount%2 == 0){
+                    Vec3 endBeam = this.getHeadPos().add(this.viewHeadY().scale(50.0D));
+                    BlockHitResult blockEnd = this.level().clip(new ClipContext(this.getHeadPos(), endBeam, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
                     if(!level().getBlockState(blockEnd.getBlockPos()).isAir()){
                         BlockPos end = blockEnd.getBlockPos();
-
+                        this.laserPosition=end.getCenter();
                         if(this.level().isClientSide){
                             for (int i = 0 ; i<3 ; i++){
                                 this.level().addParticle(MGParticles.BEAM_EXPLOSION.get(),end.getX()+this.random.nextInt(-2,2),end.getY()+this.random.nextInt(0,2),end.getZ()+this.random.nextInt(-2,2),0.0F,0.0F,0.0F);
@@ -514,7 +509,23 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                         }else {
                             this.createExplosion(end);
                         }
+                    }else {
+                        this.laserPosition = endBeam;
                     }
+                    List<EntityHitResult> hits = this.getBeamEntityHitResult(this.level(),this,this.getHeadPos(),this.laserPosition,this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
+                    if(hits!=null){
+                        for (EntityHitResult hit : hits){
+                            if(hit.getEntity() instanceof LivingEntity){
+                                LivingEntity entity = (LivingEntity) hit.getEntity();
+                                entity.invulnerableTime=0;
+                                if(entity.hurt(this.damageSources().generic(),4.0F)){
+                                    entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,3,10));
+                                    entity.setSecondsOnFire(3);
+                                }
+                            }
+                        }
+                    }
+
 
                     if(!this.level().isClientSide){
                         if(!this.isValidTarget(this.getTarget())){
@@ -522,8 +533,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                             LivingEntity livingEntity = this.level().getEntitiesOfClass(LivingEntity.class,this.getBoundingBox().inflate(40.0D),EntitySelector.NO_CREATIVE_OR_SPECTATOR.and(e->!this.is(e) && this.isValidTarget(e))).stream().findFirst().orElse(null);
                             if(livingEntity!=null){
                                 this.setTarget(livingEntity);
-                                this.laserPosition = livingEntity.position().add(0,livingEntity.getBbHeight(),0);
-                                PacketHandler.sendToAllTracking(new PacketActionRay(this.getId(), (int) this.laserPosition.x, (int) this.laserPosition.y, (int) this.laserPosition.z),this);
                             }
                             if(this.getTarget()==null){
                                 this.setLaser(false);
@@ -537,10 +546,10 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                     }
 
                 }
-                if(this.laserPosition!=null){
+                if(this.getTarget()!=null){
                     this.setPos(this.position());
 
-                    Vec3 vec32 = this.laserPosition.subtract(this.getHeadPos());
+                    Vec3 vec32 = this.getTarget().position().subtract(this.getHeadPos());
                     double f5 = -Math.toDegrees(Math.atan2(vec32.y,Math.sqrt(vec32.x*vec32.x + vec32.z*vec32.z)));
                     double f6 = Math.toDegrees(Math.atan2(vec32.z, vec32.x)) - 90.0F - this.getYRot();
                     this.rotHeadX = lerpRotation(this.rotHeadX,(float)f5 ,5.0F);
@@ -583,7 +592,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                         float entityHitDistance = (float) Math.sqrt((living.getZ() - this.getZ()) * (living.getZ() - this.getZ()) + (living.getX() - this.getX()) * (living.getX() - this.getX())) - living.getBbWidth() / 2f;
                         if(living instanceof  LivingEntity){
                             if (entityHitDistance <= 20 - 0.3 && (entityRelativeAngle <= arc / 2 && entityRelativeAngle >= -arc / 2) || (entityRelativeAngle >= 360 - arc / 2 || entityRelativeAngle <= -360 + arc / 2) ) {
-                                this.doHurtTarget(living);
+                                living.hurt(damageSources().mobAttack(this),30.0F);
+                                living.setSecondsOnFire(3);
                                 float f0=2.0F/living.getBbWidth() * 0.5F;
                                 Vec3 vec3=new Vec3(living.getX()-this.getX(),0.0F,living.getZ()-this.getZ()).normalize().scale(f0);
                                 living.push(vec3.x,vec3.y,vec3.z);
@@ -612,7 +622,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                                     if(canSummon){
                                         distance = Mth.clamp((12.0F/entityHitDistance),0.0F,1.0f);
                                         posSet.put(new BlockPos(pos2.getX(), pos2.getY(), pos2.getZ()), (int) (distance));
-                                        Minecraft.getInstance().particleEngine.destroy(pos2.above(),this.level().getBlockState(pos2));
+                                        for(int j=0;j<this.level().random.nextInt(5,10);j++){
+                                            Minecraft.getInstance().particleEngine.crack(pos2, Direction.UP);
+                                        }
                                     }
                                 }
                             }
@@ -644,7 +656,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             step1Played = true;
         }
 
-        if (!step2Played && seconds >=2.869F) {
+        if (!step2Played && seconds >= 2.869F) {
             level().playLocalSound(getX(), getY(), getZ(),
                     CVNSounds.RAY_FOOTSTEP2.get(), SoundSource.HOSTILE, 10.0F, 1.0F,false);
             step2Played = true;
@@ -656,14 +668,14 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             lift1Played = true;
         }
 
-        if (!lift2Played && seconds >=2.088F) {
+        if (!lift2Played && seconds >= 2.088F) {
             level().playLocalSound(getX(), getY(), getZ(),
                     CVNSounds.RAY_FOOTSTEP1.get(), SoundSource.HOSTILE, 10.0F, 1.0F,false);
             lift2Played = true;
         }
 
         // Reiniciar pasos si termina el ciclo de animación
-        if (seconds < 0.1F) {
+        if (seconds<0.200F) {
             step1Played = false;
             step2Played = false;
             lift1Played = false;
@@ -776,15 +788,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         return explosion;
     }
 
-
-    @Override
-    public boolean doHurtTarget(Entity p_21372_) {
-        boolean flag = super.doHurtTarget(p_21372_);
-        if(flag){
-            p_21372_.setSecondsOnFire(5);
-        }
-        return flag;
-    }
     public void applyRadius(float radius, float speedY, Vec3 pos){
         int i;
         i = Mth.ceil((float)Math.PI * radius * radius);
@@ -897,6 +900,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 ArsenalCapability arsenal = ArsenalCapability.get(p_27584_);
                 if(arsenal!=null && arsenal.rayActive){
                     if(p_27584_.level().isClientSide){
+                        p_27584_.level().playLocalSound(p_27584_.getX(),p_27584_.getY(),p_27584_.getZ(),SoundEvents.BEACON_DEACTIVATE,SoundSource.HOSTILE,5.0F,1.0F,false);
                         p_27584_.displayClientMessage(Component.translatable("ray.save"),true);
                     }else {
                         arsenal.saveRay(this,p_27584_);
@@ -929,6 +933,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     protected void doPlayerRide(Player pPlayer) {
+        this.setSitting(false);
+        this.setTowerOn(false);
         if (!this.level().isClientSide) {
             pPlayer.setYRot(this.getYRot());
             pPlayer.setXRot(this.getXRot());
@@ -1060,7 +1066,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                     arrow.setPos(part.position());
                     arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                     this.level().addFreshEntity(arrow);
-                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT2.get(),SoundSource.NEUTRAL,10.0F,3.0F + this.level().random.nextFloat()*4);
+                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT2.get(),SoundSource.NEUTRAL,10.0F,1);
                 }
                 this.isShooting=true;
             }
@@ -1079,7 +1085,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 arrow.setPos(part.position());
                 arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                 this.level().addFreshEntity(arrow);
-                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT2.get(),SoundSource.NEUTRAL,10.0F,3.0F + this.level().random.nextFloat()*4);
+                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT2.get(),SoundSource.NEUTRAL,10.0F,1);
 
             }
         }
@@ -1106,7 +1112,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     public void upEntities(List<LivingEntity> list){
         for (LivingEntity livingEntity : list){
-            if(!this.is(livingEntity) && livingEntity.hurt(this.damageSources().generic(),20.0F) ){
+            if(!this.is(livingEntity) && livingEntity.hurt(this.damageSources().mobAttack(this),25.0F) ){
                 double dx = livingEntity.getX() - this.getX();
                 double dz = livingEntity.getZ() - this.getZ();
                 double normalize = dx * dx + dz * dz;
@@ -1212,6 +1218,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 this.crackingBlock.clear();
             }
         }
+
+        this.tickStep();
+
     }
 
     public void serverTick(){
@@ -1264,7 +1273,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     @Override
     protected boolean isImmobile() {
-        return super.isImmobile() || this.isSitting() || this.isAttacking();
+        return super.isImmobile() || this.isSitting() || (this.isAttacking() && !this.bladeOn());
     }
 
     private boolean isOrderedToSit() {
@@ -1446,7 +1455,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }else if(MGKeybinds.attackKey4.getKey().getValue()==key){
             if(!this.isInWater()){
                 if(!this.level().isClientSide){
-                    if(this.prepareLaserTimer<=0){
+                    if(this.prepareLaserTimer<=0 && this.cooldownLaser<=0){
                         if(this.isLaser()){
                             this.level().playSound(null,this, SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL,2.0F,1.0F);
                             this.setLaser(false);

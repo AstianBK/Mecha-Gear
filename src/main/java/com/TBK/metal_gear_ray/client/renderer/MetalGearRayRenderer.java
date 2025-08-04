@@ -41,6 +41,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         super(p_174304_, (M) new MetalGearRayModel<>(p_174304_.bakeLayer(MetalGearRayModel.LAYER_LOCATION)), 0.0F);
         this.addLayer(new HeadModel<>(this));
         this.addLayer(new EmissiveLayer<>(this));
+        this.shadowRadius = 10.0F;
     }
 
     @Override
@@ -56,8 +57,10 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
                     return true;
                 }
             }
+            Vec3 origin = p_115468_.getHeadPos();
+            Vec3 end = p_115468_.laserPosition;
+            return p_115469_.isVisible(new AABB(origin.x,origin.y,origin.z,end.x,end.y,end.z));
         }
-        return false;
     }
 
     @Nullable
