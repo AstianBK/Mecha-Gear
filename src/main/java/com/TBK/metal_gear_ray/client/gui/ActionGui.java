@@ -36,7 +36,7 @@ public class ActionGui implements IGuiOverlay {
         if(mc.options.getCameraType().isFirstPerson()){
             if(player.isPassenger() && player.getVehicle() instanceof MetalGearRayEntity netheriteForge){
                 guiGraphics.pose().pushPose();
-                float cc = (((float)netheriteForge.cooldownLaser)/50.0F);
+                float cc = (((float)netheriteForge.cooldownLaser)/600.0F);
                 printOverlay(guiGraphics,getGuiTextures(),screenWidth,screenHeight);
 
                 if(netheriteForge.bladeOn()){

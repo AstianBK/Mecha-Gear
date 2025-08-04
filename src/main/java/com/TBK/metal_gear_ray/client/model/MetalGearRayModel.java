@@ -12,7 +12,6 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Pose;
 
 public class MetalGearRayModel<T extends MetalGearRayEntity> extends HierarchicalModel<T> {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation(MetalGearRayMod.MODID, "metalgearray"), "main");
@@ -443,16 +442,17 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 			this.LeftArm.getAllParts().forEach(ModelPart::resetPose);
 			this.RightArm.getAllParts().forEach(ModelPart::resetPose);
 		}
+
 		this.animateWalk(MetalGearRayAnim.walkbody,limbSwing,limbSwingAmount,2.0F,2.5F);
 		this.animateWalk(MetalGearRayAnim.walklegs,limbSwing,limbSwingAmount,2.0F,2.5F);
 		this.animateWalk(MetalGearRayAnim.walktail,limbSwing,limbSwingAmount,2.0F,2.5F);
 
 
-		this.animate(entity.tower_on,MetalGearRayAnim.turreton,ageInTicks,1.0F);
-		this.animate(entity.tower_off,MetalGearRayAnim.turretoff,ageInTicks,1.0F);
+		this.animate(entity.towerOn,MetalGearRayAnim.turreton,ageInTicks,1.0F);
+		this.animate(entity.towerOff,MetalGearRayAnim.turretoff,ageInTicks,1.0F);
 
-		this.animate(entity.blade_on,MetalGearRayAnim.bladeon,ageInTicks,1.0F);
-		this.animate(entity.blade_off,MetalGearRayAnim.bladeoff,ageInTicks,1.0F);
+		this.animate(entity.bladeOn,MetalGearRayAnim.bladeon,ageInTicks,1.0F);
+		this.animate(entity.bladeOff,MetalGearRayAnim.bladeoff,ageInTicks,1.0F);
 
 		if(entity.stomp.isStarted()){
 			this.LeftLeg.getAllParts().forEach(ModelPart::resetPose);
@@ -461,17 +461,17 @@ public class MetalGearRayModel<T extends MetalGearRayEntity> extends Hierarchica
 		this.animate(entity.stomp,MetalGearRayAnim.stomp,ageInTicks,1.0F);
 
 		this.animate(entity.meleeAttack,MetalGearRayAnim.melee,ageInTicks,1.0F);
-		if(entity.prepare_laser.isStarted()){
+		if(entity.prepareLaser.isStarted()){
 			this.root().getAllParts().forEach(ModelPart::resetPose);
 		}
-		this.animate(entity.prepare_laser,MetalGearRayAnim.lazer,ageInTicks,1.0F);
+		this.animate(entity.prepareLaser,MetalGearRayAnim.lazer,ageInTicks,1.0F);
 		this.animate(entity.laser,MetalGearRayAnim.lazerloop,ageInTicks,1.0F);
 
 		if(entity.isInWater()){
 			this.root().y = (float) (-12.0F);
 		}
-		this.animate(entity.in_water,MetalGearRayAnim.swim,ageInTicks,1.0F);
-		this.animate(entity.is_air,MetalGearRayAnim.air,ageInTicks,1.0F);
+		this.animate(entity.inWater,MetalGearRayAnim.swim,ageInTicks,1.0F);
+		this.animate(entity.isAir,MetalGearRayAnim.air,ageInTicks,1.0F);
 
 		if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==entity && Minecraft.getInstance().options.getCameraType().isFirstPerson()){
 			this.Neck.visible=false;

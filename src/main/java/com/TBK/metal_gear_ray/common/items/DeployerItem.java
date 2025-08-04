@@ -22,9 +22,12 @@ public class DeployerItem extends Item {
     public InteractionResult useOn(UseOnContext p_41427_) {
         ArsenalCapability arsenal = ArsenalCapability.get(p_41427_.getPlayer());
         if(arsenal!=null){
-            MetalGearRayMod.LOGGER.debug("active :"+arsenal.rayActive);
             if(!arsenal.rayActive()){
                 arsenal.spawnOrCreateRay(p_41427_.getPlayer(),p_41427_.getClickedPos());
+            }else {
+                if(!p_41427_.getLevel().isClientSide){
+                    arsenal.checkRayState(p_41427_.getLevel());
+                }
             }
             return InteractionResult.SUCCESS;
         }
