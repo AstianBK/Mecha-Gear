@@ -164,10 +164,10 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     public static AttributeSupplier setAttributes() {
         return MetalGearRayEntity.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 200.0D)
-                .add(Attributes.ARMOR,10.0D)
-                .add(Attributes.ARMOR_TOUGHNESS,5.0D)
+                .add(Attributes.ARMOR,40.0D)
+                .add(Attributes.ARMOR_TOUGHNESS,10.0D)
                 .add(Attributes.FOLLOW_RANGE, 45.D)
-                .add(Attributes.MOVEMENT_SPEED, 0.13d)
+                .add(Attributes.MOVEMENT_SPEED, 0.15d)
                 .add(Attributes.ATTACK_DAMAGE,12.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE,1.0F)
                 .add(Attributes.JUMP_STRENGTH,0.43F)
@@ -1202,7 +1202,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }
 
         if(this.prepareLaserTimer==13){
-            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,2.0F,1.0F,false);
+            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,8.0F,1.0F,false);
         }
 
         if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==this){
