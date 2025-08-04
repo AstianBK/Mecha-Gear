@@ -303,6 +303,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }
         p_21017_ = Math.min(50,p_21017_);
 
+        if(p_21016_.getEntity() instanceof Player ){
+            this.lastHurtByPlayerTime = this.tickCount;
+        }
         return super.hurt(p_21016_, p_21017_);
     }
 
@@ -345,7 +348,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             }
         }
 
-        if(this.lastHurtByPlayerTime + 250 > this.tickCount || this.getLastHurtMobTimestamp()+250>this.tickCount){
+        if(this.lastHurtByPlayerTime + 250 < this.tickCount || this.getLastHurtMobTimestamp()+250<this.tickCount){
             if(this.getMaxHealth()!=this.getHealth()){
                 if(this.tickCount%100==0){
                     if(!this.level().isClientSide){
