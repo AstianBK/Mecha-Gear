@@ -1027,6 +1027,11 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     @Override
+    public int getJumpCooldown() {
+        return this.cooldownJump;
+    }
+
+    @Override
     public boolean is(Entity p_20356_) {
         for (int j=0 ; j<this.getParts().length ; j++){
             if(this.getParts()[j]==p_20356_){
@@ -1397,22 +1402,25 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     @Override
     public void onPlayerJump(int p_30591_) {
-        if (p_30591_ < 0) {
-            p_30591_ = 0;
-        }
+        if(cooldownJump<=0){
+            if (p_30591_ < 0) {
+                p_30591_ = 0;
+            }
 
 
-        if (p_30591_ >= 90) {
-            this.jumpPendingScale = 1.0F;
-        } else {
-            this.jumpPendingScale = 0.4F + 0.4F * (float)p_30591_ / 90.0F;
+            if (p_30591_ >= 90) {
+                this.jumpPendingScale = 1.0F;
+            } else {
+                this.jumpPendingScale = 0.4F + 0.4F * (float)p_30591_ / 90.0F;
+            }
+            this.cooldownJump = 40;
+
         }
-        this.cooldownJump = 40;
     }
 
     @Override
     public boolean canJump() {
-        return !this.isInWater() && cooldownJump<=0;
+        return !this.isInWater();
     }
 
     @Override
