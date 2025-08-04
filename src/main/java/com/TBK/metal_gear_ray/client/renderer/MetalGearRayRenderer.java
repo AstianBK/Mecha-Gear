@@ -41,7 +41,7 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         super(p_174304_, (M) new MetalGearRayModel<>(p_174304_.bakeLayer(MetalGearRayModel.LAYER_LOCATION)), 0.0F);
         this.addLayer(new HeadModel<>(this));
         this.addLayer(new EmissiveLayer<>(this));
-        this.shadowRadius = 10.0F;
+        this.shadowRadius = 4.0F;
     }
 
     @Override
