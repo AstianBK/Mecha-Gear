@@ -3,6 +3,7 @@ package com.TBK.metal_gear_ray.common.register;
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.items.DeployerItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -19,6 +20,6 @@ public class CVNItems {
                     new Item.Properties()));
 
     public static final RegistryObject<Item> DEPLOYER = ITEMS.register("ray_deployer",
-            () -> new DeployerItem(new Item.Properties()));
+            () -> new DeployerItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant()));
 
 }
