@@ -23,7 +23,7 @@ public class DeployerItem extends Item {
         ArsenalCapability arsenal = ArsenalCapability.get(p_41427_.getPlayer());
         if(arsenal!=null){
             if(!arsenal.rayActive()){
-                arsenal.spawnOrCreateRay(p_41427_.getPlayer(),p_41427_.getClickedPos());
+                arsenal.spawnOrCreateRay(p_41427_.getPlayer(),p_41427_.getClickedPos().above(2));
             }else {
                 if(!p_41427_.getLevel().isClientSide){
                     arsenal.checkRayState(p_41427_.getLevel());

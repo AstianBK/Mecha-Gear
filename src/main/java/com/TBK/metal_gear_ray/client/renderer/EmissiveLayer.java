@@ -25,8 +25,6 @@ import org.joml.Vector3f;
 import org.lwjgl.opengl.GL;
 
 public class EmissiveLayer<T extends MetalGearRayEntity, M extends MetalGearRayModel<T>> extends RenderLayer<T, M> {
-
-
     public final ResourceLocation GLOWING_PART = new ResourceLocation(MetalGearRayMod.MODID,"textures/entity/metal_gear_ray/ray_glowing.png");
     public EmissiveLayer(RenderLayerParent<T, M> p_117346_) {
         super(p_117346_);

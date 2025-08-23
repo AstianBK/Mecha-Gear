@@ -12,9 +12,11 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -66,9 +68,11 @@ public class ArsenalCapability implements IArsenalPlayer {
             AABB area = new AABB(this.player.blockPosition()).inflate(16);
 
             List<LivingEntity> list = level.getEntitiesOfClass(LivingEntity.class, area, e -> e.getUUID().equals(uuid));
-            ray = list.get(0);
-            if(ray!=null){
-                return ray;
+            if(!list.isEmpty()){
+                ray = list.get(0);
+                if(ray!=null){
+                    return ray;
+                }
             }
             if(this.lastPos!=null && this.lastDimension!=null){
                 if(level.dimension()==this.lastDimension){
@@ -136,16 +140,20 @@ public class ArsenalCapability implements IArsenalPlayer {
                 }
             }
         }else {
-            ray = CVNEntityType.RAY.get().create(player.level());
-            if(ray!=null){
-                ray.setOwnerId(player.getUUID());
-                ray.setPos(Vec3.atCenterOf(pos));
-                this.rayActive = player.level().addFreshEntity(ray);
-                CompoundTag tag = new CompoundTag();
-                ray.save(tag);
-                tag.putBoolean("isSummoning",true);
-                this.data = tag;
-                isSpawn = true;
+            if(!player.level().isClientSide){
+                ray = new MetalGearRayEntity(CVNEntityType.RAY.get(),player.level());
+                if(ray!=null){
+                    ray.finalizeSpawn((ServerLevelAccessor) player.level(),player.level().getCurrentDifficultyAt(pos), MobSpawnType.MOB_SUMMONED,null,null);
+                    ray.setOwnerId(player.getUUID());
+                    ray.setPos(Vec3.atCenterOf(pos));
+                    player.level().addFreshEntity(ray);
+                    this.rayActive = true;
+                    CompoundTag tag = new CompoundTag();
+                    ray.save(tag);
+                    tag.putBoolean("isSummoning",true);
+                    this.data = tag;
+                    isSpawn = true;
+                }
             }
         }
         if(isSpawn){

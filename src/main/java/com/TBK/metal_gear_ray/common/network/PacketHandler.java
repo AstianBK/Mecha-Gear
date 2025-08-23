@@ -3,6 +3,7 @@ package com.TBK.metal_gear_ray.common.network;
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.network.messager.PacketActionRay;
 import com.TBK.metal_gear_ray.common.network.messager.PacketKeySync;
+import com.TBK.metal_gear_ray.common.network.messager.PacketMissileTarget;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,6 +28,8 @@ public class PacketHandler {
 
         channel.registerMessage(index++, PacketActionRay.class, PacketActionRay::write,
                 PacketActionRay::new, PacketActionRay::handle);
+        channel.registerMessage(index++, PacketMissileTarget.class, PacketMissileTarget::write,
+                PacketMissileTarget::new, PacketMissileTarget::handle);
         channel.registerMessage(index++, PacketKeySync.class, PacketKeySync::write,
                 PacketKeySync::new, PacketKeySync::handle);
 

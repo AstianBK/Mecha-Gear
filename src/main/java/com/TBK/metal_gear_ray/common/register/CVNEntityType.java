@@ -3,6 +3,7 @@ package com.TBK.metal_gear_ray.common.register;
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.entity.BulletEntity;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
+import com.TBK.metal_gear_ray.common.entity.MissileEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -26,5 +27,11 @@ public class CVNEntityType {
                     () -> EntityType.Builder.<BulletEntity>of(BulletEntity::new, MobCategory.MISC)
                             .sized(0.2f, 0.2f)
                             .build(new ResourceLocation(MetalGearRayMod.MODID, "bullet").toString()));
+    public static final RegistryObject<EntityType<MissileEntity>> MISSILE =
+            ENTITY_TYPES.register("missile",
+                    () -> EntityType.Builder.<MissileEntity>of(MissileEntity::new, MobCategory.MISC)
+                            .sized(0.2f, 0.2f)
+                            .clientTrackingRange(200)
+                            .build(new ResourceLocation(MetalGearRayMod.MODID, "missile").toString()));
 
 }

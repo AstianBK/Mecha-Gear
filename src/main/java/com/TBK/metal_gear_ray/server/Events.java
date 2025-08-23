@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderHandEvent;
@@ -19,6 +20,7 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -52,6 +54,49 @@ public class Events {
                 }
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onUseItem(PlayerInteractEvent.RightClickItem event) {
+        if(event.getItemStack().is(Items.STICK)){
+            if(event.getEntity().isShiftKeyDown()){
+            }else {
+                MetalGearRayMod.x-=0.1D;
+            }
+            MetalGearRayMod.LOGGER.debug("X :" + MetalGearRayMod.x);
+        }
+
+        if(event.getItemStack().is(Items.BLAZE_ROD)){
+            if(event.getEntity().isShiftKeyDown()){
+            }else {
+                MetalGearRayMod.y-=0.1D;
+            }
+            MetalGearRayMod.LOGGER.debug("Y :" + MetalGearRayMod.y);
+        }
+        if(event.getItemStack().is(Items.PRISMARINE_SHARD)){
+            MetalGearRayMod.y+=0.1D;
+
+            MetalGearRayMod.LOGGER.debug("Z :" + MetalGearRayMod.z);
+        }
+
+        if(event.getItemStack().is(Items.HEART_OF_THE_SEA)){
+            if(event.getEntity().isShiftKeyDown()){
+            }else {
+                MetalGearRayMod.x+=0.1D;
+            }
+            MetalGearRayMod.LOGGER.debug("XQ :" + MetalGearRayMod.xq);
+        }
+        if(event.getItemStack().is(Items.GOLD_INGOT)){
+            MetalGearRayMod.z+=0.1D;
+        }
+
+        if(event.getItemStack().is(Items.NETHERITE_INGOT)){
+            MetalGearRayMod.z-=0.1D;
+        }
+        MetalGearRayMod.LOGGER.debug("X :" + MetalGearRayMod.x + " Y :"+MetalGearRayMod.y+
+                " Z :" + MetalGearRayMod.z + " XQ :"+MetalGearRayMod.xq+
+                " YQ :" + MetalGearRayMod.yq + " ZQ :"+MetalGearRayMod.zq);
+
     }
     @SubscribeEvent
     public static void onAddEffect(MobEffectEvent.Added event){
@@ -105,13 +150,5 @@ public class Events {
                 event.setCanceled(true);
             }
         }
-    }
-    @SubscribeEvent
-    public static void seSalio(PlayerEvent.PlayerLoggedOutEvent event){
-        event.getEntity().getCapability(MGCapability.ARSENAL_CAPABILITY).ifPresent(cap->{
-            if(cap.getRay(event.getEntity().level()) instanceof MetalGearRayEntity ray){
-                cap.saveRay(ray,cap.player);
-            }
-        });
     }
 }

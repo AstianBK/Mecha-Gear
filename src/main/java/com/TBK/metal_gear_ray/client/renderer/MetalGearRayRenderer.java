@@ -79,9 +79,9 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
             float progressMining = ((float)p_115455_.restoreCracking-entry.getValue())/200.0F;
             if(progressMining>=0.0F){
                 BlockPos miningPos = entry.getKey();
-                double d0 = p_115455_.getX();
-                double d1 = p_115455_.getY();
-                double d2 = p_115455_.getZ();
+                double d0 = Mth.lerp(p_115457_,p_115455_.xOld,p_115455_.getX());
+                double d1 = Mth.lerp(p_115457_,p_115455_.yOld,p_115455_.getY());
+                double d2 = Mth.lerp(p_115457_,p_115455_.zo,p_115455_.getZ());
 
 
                 p_115458_.translate((double) miningPos.getX() - d0, (double) miningPos.getY() - d1, (double) miningPos.getZ() - d2);
@@ -177,23 +177,6 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
             f5 = f8;
             f6 = f9;
         }
-        /*if(inner){
-            VertexConsumer endVertexConsumer;
-            if (AlexsCaves.CLIENT_CONFIG.radiationGlowEffect.get() && glowSecondPass) {
-                PostEffectRegistry.renderEffectForNextTick(ClientProxy.IRRADIATED_SHADER);
-                endVertexConsumer = source.getBuffer(ACRenderTypes.getTremorzillaBeam(getEndBeamTexture(entity), true));
-            } else {
-                endVertexConsumer = source.getBuffer(ACRenderTypes.getTremorzillaBeam(getEndBeamTexture(entity), false));
-            }
-            poseStack.pushPose();
-            poseStack.translate(0, 0, length - 1.5F);
-            poseStack.mulPose(Axis.ZP.rotationDegrees(45));
-            poseStack.mulPose(Axis.XP.rotationDegrees(90));
-            poseStack.scale(width, width, width);
-            BEAM_END_MODEL.resetToDefaultPose();
-            BEAM_END_MODEL.renderToBuffer(poseStack, endVertexConsumer, 240, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-            poseStack.popPose();
-        }*/
         poseStack.popPose();
     }
 

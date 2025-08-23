@@ -2,6 +2,7 @@ package com.TBK.metal_gear_ray;
 
 import com.TBK.metal_gear_ray.client.renderer.BulletRenderer;
 import com.TBK.metal_gear_ray.client.renderer.MetalGearRayRenderer;
+import com.TBK.metal_gear_ray.client.renderer.MissileRenderer;
 import com.TBK.metal_gear_ray.common.entity.BulletEntity;
 import com.TBK.metal_gear_ray.common.network.PacketHandler;
 import com.TBK.metal_gear_ray.common.register.*;
@@ -83,6 +84,7 @@ public class MetalGearRayMod
     public void registerRenderers(FMLCommonSetupEvent event){
         EntityRenderers.register(CVNEntityType.RAY.get(), MetalGearRayRenderer::new);
         EntityRenderers.register(CVNEntityType.BULLET.get(), BulletRenderer::new);
+        EntityRenderers.register(CVNEntityType.MISSILE.get(), MissileRenderer::new);
     }
     public void onRegisterAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(new ResourceLocation(MODID, "obj/entity/ray_head.obj"));

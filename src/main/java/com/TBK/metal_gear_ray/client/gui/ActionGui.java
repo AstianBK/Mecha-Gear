@@ -45,11 +45,30 @@ public class ActionGui implements IGuiOverlay {
                 if(netheriteForge.towerOn()){
                     printOverlay(guiGraphics,getTowerState(),screenWidth,screenHeight);
                 }
+                printAmount(guiGraphics,getOffMissileTextures(),screenWidth,screenHeight,12);
+                printAmount(guiGraphics,getMissileTextures(),screenWidth,screenHeight, netheriteForge.getAmount());
                 //printOverlay(guiGraphics,getLaserTextures(),i1,k1);
                 this.printOverlayPercent(guiGraphics,getLaserTextures(),screenWidth,screenHeight,1.0F);
                 this.printOverlayPercent(guiGraphics,getOffLaserTextures(),screenWidth,screenHeight,cc);
                 guiGraphics.pose().popPose();
             }
+        }
+    }
+
+    public void printAmount(GuiGraphics guiGraphics, ResourceLocation resourceLocation, int screenWidth, int screenHeight, int amount) {
+        float scale = 0.33f;
+        int spriteWidth = 74;
+        int spriteHeight = 74;
+
+        int drawX = (screenWidth / 2 - (int)(spriteWidth * scale / 2)) + 73;
+        int drawY = (screenHeight / 2 - (int)(spriteHeight * scale / 2)) - 72;
+
+        for (int i=0 ; i<amount ; i++){
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().translate(drawX+19*0.33*i, drawY, 0);
+            guiGraphics.pose().scale(scale, scale, 1);
+            guiGraphics.blit(resourceLocation, 0, 0,0,0,spriteWidth,  Mth.ceil(spriteHeight), spriteWidth, spriteHeight);
+            guiGraphics.pose().popPose();
         }
     }
     public void printOverlayPercent(GuiGraphics guiGraphics, ResourceLocation resourceLocation, int screenWidth, int screenHeight, float percentHeight) {
@@ -88,6 +107,7 @@ public class ActionGui implements IGuiOverlay {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         guiGraphics.pose().popPose();
     }
+
     public ResourceLocation getBladeState(){
         return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/ray_blade_on_overlay.png");
     }
@@ -96,6 +116,12 @@ public class ActionGui implements IGuiOverlay {
     }
     public ResourceLocation getGuiTextures(){
         return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/ray_overlay.png");
+    }
+    public ResourceLocation getMissileTextures(){
+        return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/missile_amount_on.png");
+    }
+    public ResourceLocation getOffMissileTextures(){
+        return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/missile_amount_off.png");
     }
     public ResourceLocation getLaserTextures(){
         return new ResourceLocation(MetalGearRayMod.MODID,"textures/gui/ray_laser_on_overlay.png");

@@ -3,6 +3,7 @@ package com.TBK.metal_gear_ray.client;
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.client.gui.ActionGui;
 import com.TBK.metal_gear_ray.client.model.MetalGearRayModel;
+import com.TBK.metal_gear_ray.client.model.MissileModel;
 import com.TBK.metal_gear_ray.client.particles.BeamExplosionParticles;
 import com.TBK.metal_gear_ray.common.register.MGParticles;
 import net.minecraftforge.api.distmarker.Dist;
@@ -22,6 +23,7 @@ public class ClientEvent {
     @SubscribeEvent
     public static void registerLayerDefinition(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(MetalGearRayModel.LAYER_LOCATION,MetalGearRayModel::createBodyLayer);
+        event.registerLayerDefinition(MissileModel.LAYER_LOCATION,MissileModel::createBodyLayer);
 
     }
 
