@@ -1618,10 +1618,11 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         MissileEntity missile = new MissileEntity(this.level(),i + 1);
         missile.setOwner(this);
         missile.setTarget(living);
-        missile.setXRot(90.0F);
+
         missile.setPos(this.slots[i].getX(),this.slots[i].getY(),this.slots[i].getZ());
+        missile.calculateRotPosition(missile.blockPosition(),living.blockPosition());
         this.level().addFreshEntity(missile);
-        PacketHandler.sendToAllTracking(new PacketMissileTarget(missile.getId(),living.getId(),20*i + 1),this);
+        PacketHandler.sendToAllTracking(new PacketMissileTarget(missile.getId(),living.getId(),i + 1),this);
     }
 
     @Override
