@@ -27,6 +27,13 @@ public class CVNSounds {
     public static final RegistryObject<SoundEvent> RAY_STOMP =
             registerSoundEvent("ray_stomp");
 
+
+    public static final RegistryObject<SoundEvent> RAY_MISSILE_LOCK=
+            registerSoundEvent("ray_missile_lock");
+
+    public static final RegistryObject<SoundEvent> RAY_MISSILE_RELOAD=
+            registerSoundEvent("ray_missile_reload");
+
     public static final RegistryObject<SoundEvent> RAY_TURRET_SHOOT =
             registerSoundEvent("ray_turret_shoot");
 

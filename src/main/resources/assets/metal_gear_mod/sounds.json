@@ -5,6 +5,18 @@
       "metal_gear_mod:ray_stomp"
     ]
   },
+  "ray_missile_lock": {
+    "subtitle": "sounds.metal_gear_mod.ray_missile_lock",
+    "sounds": [
+      "metal_gear_mod:ray_missile_lock"
+    ]
+  },
+  "ray_missile_reload": {
+    "subtitle": "sounds.metal_gear_mod.ray_missile_reload",
+    "sounds": [
+      "metal_gear_mod:ray_missile_reload"
+    ]
+  },
   "ray_roar": {
     "subtitle": "sounds.metal_gear_mod.ray_roar",
     "sounds": [
