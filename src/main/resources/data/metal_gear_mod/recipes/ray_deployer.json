@@ -1,0 +1,26 @@
+    {
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "#n#",
+        "nNn",
+        "GnG"
+    ],
+    "key": {
+        "#": {
+            "item": "minecraft:redstone_block"
+        },
+        "n": {
+            "item": "minecraft:netherite_ingot"
+        },
+        "N": {
+            "item": "minecraft:nether_star"
+        },
+        "G": {
+            "item": "minecraft:gold_block"
+        }
+    },
+    "result": {
+        "item": "metal_gear_mod:ray_deployer",
+        "count": 1
+    }
+}

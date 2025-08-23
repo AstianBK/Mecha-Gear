@@ -1,13 +1,15 @@
 {
-  "ray.0": "Following",
-  "ray.1": "Wandering",
-  "ray.2": "Waiting",
+  "ray.sitting": "Order: Wait",
+  "ray.waiting": "Order: Wait",
+  "ray.wandering": "Order: Wander off",
+  "ray.follow": "Order: Follow",
+  "ray.following": "Order: Follow",
 
 
   "entity.metal_gear_mod.ray": "Ray",
 
-  "itemGroup.metal_gear_mod": "Metal Gear Ray",
+  "itemGroup.witch_archive": "Witch's Archive: Ray",
 
-
+  "item.metal_gear_mod.ray_deployer": "R.A.Y Deployer",
   "item.metal_gear_mod.ray_spawn_egg": "Ray Spawn Egg"
 }
