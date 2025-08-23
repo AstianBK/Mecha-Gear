@@ -592,7 +592,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             if(this.bladeOn()){
                 if(this.attackTimer == 16){
                     if(this.level().isClientSide){
-                        this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_SWORD_SWING.get(),SoundSource.NEUTRAL,2.0F,1.0F,false);
+                        this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_SWORD_SWING.get(),SoundSource.NEUTRAL,4.0F,1.0F,false);
                     }
                     List<Entity> targets = this.level().getEntitiesOfClass(Entity.class,this.body.getBoundingBox().inflate(7,7,7), e -> e!=this.getControllingPassenger() && e != this && this.distanceTo(e) <= 20 + e.getBbWidth() / 2f && e.getY() <= this.getY() + 10);
                     for(Entity living : targets){
@@ -1108,7 +1108,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                     arrow.setPos(part.position());
                     arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                     this.level().addFreshEntity(arrow);
-                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,4.0F,1);
+                    this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,1.0F,1);
                 }
                 this.isShooting=true;
             }
@@ -1128,7 +1128,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 arrow.setPos(part.position());
                 arrow.shoot(target.getX()-part.getX(),target.getY()-part.getY(),target.getZ()-part.getZ(),1.5F,1.0F);
                 this.level().addFreshEntity(arrow);
-                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,4.0F,1);
+                this.level().playSound(null,this,CVNSounds.RAY_TURRET_SHOOT3.get(),SoundSource.NEUTRAL,1.0F,1);
 
             }
         }
@@ -1244,8 +1244,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             this.interpolationCamTimer--;
         }
 
-        if(this.prepareLaserTimer==13){
-            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,8.0F,1.0F,false);
+        if(this.prepareLaserTimer==0){
+            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,350.0F,1.0F,false);
         }
 
         if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==this){
