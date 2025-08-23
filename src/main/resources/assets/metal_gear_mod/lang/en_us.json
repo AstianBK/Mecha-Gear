@@ -6,6 +6,11 @@
   "ray.following": "Order: Follow",
 
 
+  "key.category.metal_gear_mod": "R.A.Y Controls",
+  "key.metal_gear_mod.attack_key2": "Turret Mode ON/OFF",
+  "key.metal_gear_mod.attack_key3": "Blade Mode ON/OFF",
+  "key.metal_gear_mod.attack_key4": "Shoot Lazer",
+
   "entity.metal_gear_mod.ray": "Ray",
 
   "itemGroup.witch_archive": "Witch's Archive: Ray",
