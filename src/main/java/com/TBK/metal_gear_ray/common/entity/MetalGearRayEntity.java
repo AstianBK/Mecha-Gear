@@ -1244,7 +1244,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             this.interpolationCamTimer--;
         }
 
-        if(this.prepareLaserTimer==1){
+        if(this.prepareLaserTimer==12){
             this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,350.0F,1.0F,false);
         }
 
