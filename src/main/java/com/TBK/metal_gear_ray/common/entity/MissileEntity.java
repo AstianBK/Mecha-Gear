@@ -138,6 +138,25 @@ public class MissileEntity extends AbstractArrow {
         return new Vec3(vx, this.getDeltaMovement().y, vz);
     }
 
+    public void calculateRotPosition(BlockPos from, BlockPos to) {
+        double g = 0.08;
+
+        double dx = (to.getX() + 0.5) - (from.getX() + 0.5);
+        double dy = to.getY() - from.getY();
+        double dz = (to.getZ() + 0.5) - (from.getZ() + 0.5);
+
+        double horizontalDist = Math.sqrt(dx * dx + dz * dz);
+
+        double vHoriz = 0.6;
+
+        int ticks = Math.max(1, (int) Math.round(horizontalDist / vHoriz));
+
+        double vx = dx / ticks;
+        double vz = dz / ticks;
+        double vy = (dy + 0.5 * g * ticks * ticks) / ticks;
+
+        this.updateRot(new Vec3(vx,vy,vz),true);
+    }
     public LivingEntity getTarget() {
         return target;
     }
@@ -165,11 +184,10 @@ public class MissileEntity extends AbstractArrow {
         if(this.delayTime<=0){
             this.baseTick();
 
-            if(this.tickCount<this.maxTickAltura && this.tickCount%5==0 && this.getTarget()!=null){
+            if(this.getTarget()!=null){
                 Vec3 start = this.position();
                 Vec3 end = new Vec3(this.targetX,this.targetY,this.targetZ);
                 Vec3 velocity = this.updateVelocity(start, end);
-
                 this.setDeltaMovement(velocity);
             }
 
