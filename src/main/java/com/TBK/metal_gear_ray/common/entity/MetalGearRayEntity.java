@@ -1482,7 +1482,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             this.tickReload=10;
             this.cooldownAmount=200;
         }else if(p_21375_==72){
-            this.level().playLocalSound(this.blockPosition(),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,20.0F,1.0F,true);
+            this.level().playLocalSound(this.blockPosition(),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,5.0F,1.0F,true);
         }
         super.handleEntityEvent(p_21375_);
     }
