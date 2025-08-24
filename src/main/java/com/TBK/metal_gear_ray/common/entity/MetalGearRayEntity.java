@@ -383,8 +383,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         if(this.getAmount()<12){
             cooldownAmount--;
             if(cooldownAmount<=0){
-                if(this.level().isClientSide && this.getControllingPassenger()!=null){
-                    this.level().playLocalSound(BlockPos.containing(this.getControllingPassenger().position()),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,5.0F,1.0F,false);
+                if(!this.level().isClientSide){
+                    this.level().broadcastEntityEvent(this,(byte) 72);
                 }
                 this.plusAmount(3);
                 cooldownAmount=200;
@@ -1482,6 +1482,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
             this.plusAmount(-3);
             this.tickReload=10;
             cooldownAmount=200;
+        }else if(p_21375_==72){
+            this.level().playLocalSound(BlockPos.containing(this.getControllingPassenger().position()),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,5.0F,1.0F,false);
         }
         super.handleEntityEvent(p_21375_);
     }

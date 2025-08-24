@@ -98,15 +98,6 @@ public class Events {
                 " YQ :" + MetalGearRayMod.yq + " ZQ :"+MetalGearRayMod.zq);
 
     }
-    @SubscribeEvent
-    public static void onAddEffect(MobEffectEvent.Added event){
-        if(!event.getEffectInstance().getEffect().isBeneficial()){
-            Entity vehicle = event.getEntity().getVehicle();
-            if(vehicle instanceof IMecha){
-                event.setCanceled(true);
-            }
-        }
-    }
 
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event){
