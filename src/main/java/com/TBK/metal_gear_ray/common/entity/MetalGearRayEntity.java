@@ -231,7 +231,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     protected void executeRidersJump(float p_251967_, Vec3 p_275627_) {
         double d0 = this.getAttributeValue(Attributes.JUMP_STRENGTH) * (double)this.getBlockJumpFactor() + (double)this.getJumpBoostPower();
-        this.addDeltaMovement(this.getLookAngle().multiply(4.0D, 0.0D, 4.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(4.4285F * p_251967_) * d0, 0.0D));
+        this.addDeltaMovement(this.getLookAngle().multiply(4.0D, 0.0D, 4.0D).normalize().scale((double)(22.2222F * p_251967_) * this.getAttributeValue(Attributes.MOVEMENT_SPEED) * (double)this.getBlockSpeedFactor()).add(0.0D, (double)(this.isInWater() ? 10.0F  : 4.4285F  * p_251967_) * d0, 0.0D));
         this.setIsJumping(true);
         this.hasImpulse = true;
     }
@@ -241,7 +241,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
 
         if(this.isControlledByLocalInstance()){
-            if (this.onGround()) {
+            if (this.onGround() || this.isInWater()) {
                 if(this.isJumping()){
                     if(this.level().isClientSide){
                         this.applyRadius(10,0.2F,this.position());
@@ -383,6 +383,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         if(this.getAmount()<12){
             cooldownAmount--;
             if(cooldownAmount<=0){
+                if(this.level().isClientSide && this.getControllingPassenger()!=null){
+                    this.level().playLocalSound(BlockPos.containing(this.getControllingPassenger().position()),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,20.0F,1.0F,false);
+                }
                 this.plusAmount(3);
                 cooldownAmount=200;
             }
@@ -422,7 +425,18 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }else{
             this.serverTick();
         }
+        if (!this.level().isClientSide && this.tickCount%20==0 && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.level(), this)) {
+            boolean flag = false;
+            AABB aabb = this.body.getBoundingBox().inflate(1D);
 
+            for(BlockPos blockpos : BlockPos.betweenClosed(Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ), Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
+                BlockState blockstate = this.level().getBlockState(blockpos);
+                Block block = blockstate.getBlock();
+                if (block instanceof LeavesBlock || blockstate.is(BlockTags.LOGS)) {
+                    flag = this.level().destroyBlock(blockpos, true, this) || flag;
+                }
+            }
+        }
         if(this.tickReload>0){
             this.tickReload--;
         }
@@ -980,6 +994,11 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     @Override
+    public boolean canBeAffected(MobEffectInstance p_21197_) {
+        return false;
+    }
+
+    @Override
     public void checkDespawn() {
 
     }
@@ -1085,7 +1104,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 return true;
             }
         }
-        return super.is(p_20356_);
+        return super.is(p_20356_) || this.getOwner().is(p_20356_);
     }
 
     public boolean isLaser(){
@@ -1134,10 +1153,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }
     }
 
-    @Override
-    public boolean addEffect(MobEffectInstance p_147208_, @Nullable Entity p_147209_) {
-        return false;
-    }
 
     @Override
     protected float nextStep() {
@@ -1272,18 +1287,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     }
 
     public void serverTick(){
-        if (this.horizontalCollision && net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(this.level(), this)) {
-            boolean flag = false;
-            AABB aabb = this.body.getBoundingBox().inflate(2D);
 
-            for(BlockPos blockpos : BlockPos.betweenClosed(Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ), Mth.floor(aabb.maxX), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ))) {
-                BlockState blockstate = this.level().getBlockState(blockpos);
-                Block block = blockstate.getBlock();
-                if (block instanceof LeavesBlock || blockstate.is(BlockTags.LOGS)) {
-                    flag = this.level().destroyBlock(blockpos, true, this) || flag;
-                }
-            }
-        }
         if (this.tickCount % 5 == 0) {
             if (this.positionOld != null && this.positionOld.closerThan(this.position(), 0.01)) {
                 this.setSprinting(false);
@@ -1520,62 +1524,57 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     @Override
     public void handleKey(int key) {
-        if(key==0){
-            if(this.isSprinting()){
-                if(this.getAmount()>0 && this.tickReload<=0){
-                    int i = 0;
-                    List<LivingEntity> list = new ArrayList<>();
-                    BlockHitResult blockEnd = this.level().clip(new ClipContext(this.getHeadPos(),this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F),this.getControllingPassenger().getYHeadRot()).scale(100.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
-                    EntityHitResult hit = ProjectileUtil.getEntityHitResult(this.level(),this,this.getHeadPos(),this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F),this.getControllingPassenger().getYHeadRot()).scale(100.0D)),this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
-                    if(hit != null){
-                        MetalGearRayMod.LOGGER.debug("Le pego a una entidad");
-                        Vec3 target = hit.getEntity().position();
-                        list = hit.getEntity().level().getEntitiesOfClass(LivingEntity.class,hit.getEntity().getBoundingBox().inflate(5.0F),e->!this.is(e));
-                        list.sort(Comparator.comparingDouble(e -> e.distanceToSqr(target.x, target.y, target.z)));
-                    }else if (blockEnd.getType() != HitResult.Type.MISS){
-                        MetalGearRayMod.LOGGER.debug("Le pego a un bloque");
-                        Vec3 target = blockEnd.getBlockPos().getCenter();
-                        list = new ArrayList<>(
-                                this.level().getEntitiesOfClass(LivingEntity.class, new AABB(blockEnd.getBlockPos()).inflate(5.0F), e -> !this.is(e))
-                        );
-                        list.sort(Comparator.comparingDouble(e -> e.distanceToSqr(target.x, target.y, target.z)));
-                    }
-                    this.tickReload = 10;
-                    if(!list.isEmpty()){
-                        this.plusAmount(-3);
-                        this.level().broadcastEntityEvent(this,(byte) 71);
-                        int k = list.size()>2 ? 1 : 4-list.size();
-                        for (LivingEntity living : list){
-                            for(int j=0 ; j<k ; j++){
-                                this.spawnMissile(living,i);
-                                if(i>2){
-                                    break;
-                                }
-                                i++;
-                            }
+        if(key == 1){
+            if(this.getAmount()>0 && this.tickReload<=0){
+                int i = 0;
+                List<LivingEntity> list = new ArrayList<>();
+                BlockHitResult blockEnd = this.level().clip(new ClipContext(this.getHeadPos(),this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F),this.getControllingPassenger().getYHeadRot()).scale(100.0D)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,this));
+                EntityHitResult hit = ProjectileUtil.getEntityHitResult(this.level(),this,this.getHeadPos(),this.getHeadPos().add(this.calculateViewVector(this.getControllingPassenger().getViewXRot(1.0F),this.getControllingPassenger().getYHeadRot()).scale(100.0D)),this.getBoundingBox().inflate(100.0F), e->!this.is(e),0.5F);
+                if(hit != null){
+                    Vec3 target = hit.getEntity().position();
+                    list = hit.getEntity().level().getEntitiesOfClass(LivingEntity.class,hit.getEntity().getBoundingBox().inflate(5.0F),e->!this.is(e));
+                    list.sort(Comparator.comparingDouble(e -> e.distanceToSqr(target.x, target.y, target.z)));
+                }else if (blockEnd.getType() != HitResult.Type.MISS){
+                    Vec3 target = blockEnd.getBlockPos().getCenter();
+                    list = new ArrayList<>(
+                            this.level().getEntitiesOfClass(LivingEntity.class, new AABB(blockEnd.getBlockPos()).inflate(5.0F), e -> !this.is(e))
+                    );
+                    list.sort(Comparator.comparingDouble(e -> e.distanceToSqr(target.x, target.y, target.z)));
+                }
+                this.tickReload = 10;
+                if(!list.isEmpty()){
+                    this.plusAmount(-3);
+                    this.level().broadcastEntityEvent(this,(byte) 71);
+                    int k = list.size()>2 ? 1 : 4-list.size();
+                    for (LivingEntity living : list){
+                        for(int j=0 ; j<k ; j++){
+                            this.spawnMissile(living,i);
                             if(i>2){
                                 break;
                             }
+                            i++;
                         }
-                    }
-                }
-            }else {
-                if(!this.isInWater() && !this.isAttacking() && this.onGround()){
-                    MetalGearRayEntity.this.setIsAttacking(true);
-                    if(this.bladeOn()){
-                        this.attackTimer=35;
-                        if(!MetalGearRayEntity.this.level().isClientSide){
-                            MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 5);
-                        }
-                    }else {
-                        this.attackTimer=40;
-                        if(!MetalGearRayEntity.this.level().isClientSide){
-                            MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 4);
+                        if(i>2){
+                            break;
                         }
                     }
                 }
             }
-
+        }else if(key==0){
+            if(!this.isInWater() && !this.isAttacking() && this.onGround()){
+                MetalGearRayEntity.this.setIsAttacking(true);
+                if(this.bladeOn()){
+                    this.attackTimer=35;
+                    if(!MetalGearRayEntity.this.level().isClientSide){
+                        MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 5);
+                    }
+                }else {
+                    this.attackTimer=40;
+                    if(!MetalGearRayEntity.this.level().isClientSide){
+                        MetalGearRayEntity.this.level().broadcastEntityEvent(MetalGearRayEntity.this,(byte) 4);
+                    }
+                }
+            }
         }else if(MGKeybinds.attackKey4.getKey().getValue()==key){
             if(!this.isInWater()){
                 if(!this.level().isClientSide){

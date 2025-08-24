@@ -46,8 +46,12 @@ public class MissileRenderer<T extends MissileEntity> extends EntityRenderer<T> 
             double x = Mth.lerp(p_113841_,p_113839_.targetXOld,p_113839_.targetX);
             double y = Mth.lerp(p_113841_,p_113839_.targetYOld,p_113839_.targetY)+0.24D;
             double z = Mth.lerp(p_113841_,p_113839_.targetZOld,p_113839_.targetZ);
-
+            double distance = Math.abs(Mth.lerp(p_113841_,p_113839_.yOld-p_113839_.targetYOld,p_113839_.getY()-p_113839_.targetY));
+            int instancia = Mth.ceil(Mth.clamp(3.0D * (1.0F-(distance / Math.abs(p_113839_.maxHeight))),0,3));
             p_113842_.translate( x - d0,  y - d1,  z - d2);
+            if(instancia<3){
+                p_113842_.mulPose(Axis.YP.rotationDegrees(3.0F*p_113839_.tickCount));
+            }
             PoseStack.Pose pose = p_113842_.last();
             this.drawSlash(pose,p_113839_,p_113843_,p_113844_,5.0F,p_113841_);
         }

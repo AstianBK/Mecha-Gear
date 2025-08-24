@@ -141,7 +141,7 @@ public class BeamExplosionEntity extends Explosion {
             for(BlockPos blockpos : this.toBlow) {
                 BlockState blockstate = this.level.getBlockState(blockpos);
                 Block block = blockstate.getBlock();
-                if (!blockstate.isAir() && (blockstate.is(BlockTags.DIRT) || blockstate.is(Blocks.DIRT_PATH))) {
+                if (!blockstate.isAir() && (blockstate.is(BlockTags.DIRT) || blockstate.is(Blocks.DIRT_PATH)) || blockstate.is(BlockTags.LEAVES)) {
                     BlockPos blockpos1 = blockpos.immutable();
                     this.level.getProfiler().push("explosion_blocks");
                     if (blockstate.canDropFromExplosion(this.level, blockpos, this)) {

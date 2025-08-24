@@ -151,4 +151,10 @@ public class Events {
             }
         }
     }
+    @SubscribeEvent
+    public static void seSalio(PlayerEvent.PlayerLoggedOutEvent event){
+        if(event.getEntity().isPassenger() && event.getEntity().getVehicle() instanceof IMecha){
+            event.getEntity().dismountTo(event.getEntity().getX(),event.getEntity().getY(),event.getEntity().getZ());
+        }
+    }
 }

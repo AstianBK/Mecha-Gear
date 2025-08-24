@@ -2,11 +2,14 @@ package com.TBK.metal_gear_ray.common.entity;
 
 import com.TBK.metal_gear_ray.MetalGearRayMod;
 import com.TBK.metal_gear_ray.common.register.CVNEntityType;
+import com.TBK.metal_gear_ray.common.register.CVNSounds;
+import com.TBK.metal_gear_ray.common.register.MGParticles;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -15,6 +18,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,6 +45,7 @@ public class MissileEntity extends AbstractArrow {
     public double distanceClient = 0.0D;
     public double distanceClientOld = 0.0D;
     public int delayTime = 0;
+    public int lockTime = 0;
     public MissileEntity(Level p_37249_,int delayTime) {
         super(CVNEntityType.MISSILE.get(), p_37249_);
         this.setNoGravity(false);
@@ -81,12 +87,29 @@ public class MissileEntity extends AbstractArrow {
         if (hitresult$type == HitResult.Type.ENTITY) {
             this.onHitEntity((EntityHitResult)p_37260_);
         }
-        if(!this.level().isClientSide){
-            this.level().explode(null,this.getX(),this.getY(),this.getZ(),2.0F, Level.ExplosionInteraction.MOB);
+        BlockPos end = BlockPos.containing(p_37260_.getLocation());
+        if(this.level().isClientSide){
+            for (int i = 0 ; i<3 ; i++){
+                this.level().addParticle(MGParticles.BEAM_EXPLOSION.get(),end.getX()+this.random.nextInt(-2,2),end.getY()+this.random.nextInt(0,2),end.getZ()+this.random.nextInt(-2,2),0.0F,0.0F,0.0F);
+            }
+        }else {
+            BeamExplosionEntity entity = this.createExplosion(end);
+            this.level().getEntitiesOfClass(LivingEntity.class,new AABB(end).inflate(5.0F),e->!this.getOwner().is(e)).forEach(e->{
+                e.invulnerableTime=0;
+                hurt(damageSources().explosion(entity),10.0F);
+                e.invulnerableTime=0;
+            });
         }
         this.discard();
     }
 
+    public BeamExplosionEntity createExplosion(BlockPos end){
+        BeamExplosionEntity explosion = new BeamExplosionEntity(this.level(),this,null,new ExplosionDamageCalculator(),end.getX(),end.getY(),end.getZ(),4.0f,false, Explosion.BlockInteraction.DESTROY);
+        if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this.level(), explosion)) return explosion;
+        explosion.explode();
+        explosion.finalizeExplosion(false);
+        return explosion;
+    }
     public Vec3 calculateJumpVelocity(BlockPos from, BlockPos to) {
         double g = 0.08; // gravedad aproximada de Minecraft
 
@@ -95,24 +118,19 @@ public class MissileEntity extends AbstractArrow {
         double dy = to.getY() - from.getY();
         double dz = (to.getZ() + 0.5) - (from.getZ() + 0.5);
 
-        // distancia horizontal
         double horizontalDist = Math.sqrt(dx * dx + dz * dz);
 
-        // velocidad horizontal deseada (puedes ajustar este valor)
         double vHoriz = 0.6;
 
-        // calcular ticks de vuelo según distancia
         int ticks = Math.max(1, (int) Math.round(horizontalDist / vHoriz));
 
-        // calcular velocidades
         double vx = dx / ticks;
         double vz = dz / ticks;
         double vy = (dy + 0.5 * g * ticks * ticks) / ticks;
 
         int tickAltura = Mth.ceil(vy / g);
         this.maxHeight = (vy * vy) / (2 * g);
-        this.maxTickAltura = tickAltura+this.tickCount;
-
+        this.maxTickAltura = tickAltura+this.tickCount+Mth.ceil(tickAltura*0.25F);
 
         return new Vec3(vx, vy, vz);
     }
@@ -180,6 +198,10 @@ public class MissileEntity extends AbstractArrow {
 
 
             }
+        }
+
+        if(this.level().isClientSide && this.getTarget()!=null && this.tickCount%6==0){
+            this.level().playLocalSound(this.getTarget().blockPosition(), CVNSounds.RAY_MISSILE_LOCK.get(), SoundSource.NEUTRAL,5.0F,1.0f,false);
         }
         if(this.delayTime<=0){
             this.baseTick();
