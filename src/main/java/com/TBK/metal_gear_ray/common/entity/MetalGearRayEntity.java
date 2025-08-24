@@ -383,8 +383,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         if(this.getAmount()<12){
             cooldownAmount--;
             if(cooldownAmount<=0){
-                if(!this.level().isClientSide){
-                    this.level().broadcastEntityEvent(this,(byte) 72);
+                if(!this.level().isClientSide && this.getControllingPassenger()!=null){
+                    this.level().playSound(null,this.getControllingPassenger(),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,5.0F,1.0F);
                 }
                 this.plusAmount(3);
                 cooldownAmount=200;
@@ -576,7 +576,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                             }
                         }
                     }
-
                 }
                 if(this.laserPosition!=null){
                     this.setPos(this.position());
@@ -1481,9 +1480,8 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }else if(p_21375_==71){
             this.plusAmount(-3);
             this.tickReload=10;
-            cooldownAmount=200;
         }else if(p_21375_==72){
-            this.level().playLocalSound(BlockPos.containing(this.getControllingPassenger().position()),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,5.0F,1.0F,false);
+            this.level().playLocalSound(this.blockPosition(),CVNSounds.RAY_MISSILE_RELOAD.get(),SoundSource.NEUTRAL,20.0F,1.0F,true);
         }
         super.handleEntityEvent(p_21375_);
     }
@@ -1548,6 +1546,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                 if(!list.isEmpty()){
                     this.plusAmount(-3);
                     this.level().broadcastEntityEvent(this,(byte) 71);
+                    cooldownAmount=200;
                     int k = list.size()>2 ? 1 : 4-list.size();
                     for (LivingEntity living : list){
                         for(int j=0 ; j<k ; j++){
@@ -1561,7 +1560,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                             break;
                         }
                     }
-                    cooldownAmount=200;
                 }
             }
         }else if(key==0){

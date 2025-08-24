@@ -92,11 +92,12 @@ public class MissileEntity extends AbstractArrow {
             for (int i = 0 ; i<3 ; i++){
                 this.level().addParticle(MGParticles.BEAM_EXPLOSION.get(),end.getX()+this.random.nextInt(-2,2),end.getY()+this.random.nextInt(0,2),end.getZ()+this.random.nextInt(-2,2),0.0F,0.0F,0.0F);
             }
+            this.level().playLocalSound(this.getTarget().blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.NEUTRAL,5.0F,1.0f,false);
         }else {
             BeamExplosionEntity entity = this.createExplosion(end);
             this.level().getEntitiesOfClass(LivingEntity.class,new AABB(end).inflate(5.0F),e->!this.getOwner().is(e)).forEach(e->{
                 e.invulnerableTime=0;
-                hurt(damageSources().explosion(entity),10.0F);
+                e.hurt(damageSources().explosion(entity),10.0F);
                 e.invulnerableTime=0;
             });
         }
