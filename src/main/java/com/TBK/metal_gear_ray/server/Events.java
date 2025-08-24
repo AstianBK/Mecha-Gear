@@ -7,15 +7,17 @@ import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import com.TBK.metal_gear_ray.server.capability.ArsenalCapability;
 import com.TBK.metal_gear_ray.server.capability.MGCapability;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.ViewportEvent;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.gui.overlay.GuiOverlayManager;
+import net.minecraftforge.client.gui.overlay.NamedGuiOverlay;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
@@ -102,6 +104,14 @@ public class Events {
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event){
         if(event.getEntity().getVehicle() instanceof IMecha){
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
+        if (Minecraft.getInstance().player.getVehicle() instanceof IMecha && event.getOverlay() == VanillaGuiOverlay.MOUNT_HEALTH.type()) {
+            // Cancela la renderización de la barra de vida de la montura
             event.setCanceled(true);
         }
     }
