@@ -202,7 +202,7 @@ public class MissileEntity extends AbstractArrow {
         }
 
         if(this.level().isClientSide && this.getTarget()!=null && this.tickCount%6==0){
-            this.level().playLocalSound(this.getTarget().blockPosition(), CVNSounds.RAY_MISSILE_LOCK.get(), SoundSource.NEUTRAL,5.0F,1.0f,false);
+            this.level().playLocalSound(this.getTarget().blockPosition(), CVNSounds.RAY_MISSILE_LOCK.get(), SoundSource.NEUTRAL,3.0F,1.0f,false);
         }
         if(this.delayTime<=0){
             this.baseTick();
