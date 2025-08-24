@@ -1245,7 +1245,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         }
 
         if(this.prepareLaserTimer==12){
-            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,350.0F,1.0F,false);
+            this.level().playLocalSound(this.getX(),this.getY(),this.getZ(),CVNSounds.RAY_CHARGE_LASER.get(),SoundSource.NEUTRAL,10.0F,1.0F,false);
         }
 
         if(Minecraft.getInstance().player!=null && Minecraft.getInstance().player.getVehicle()==this){
