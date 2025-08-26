@@ -945,7 +945,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
         }
         if(this.getOwnerUUID()!=null){
-            if(stack.is(CVNItems.DEPLOYER.get()) && this.getOwnerUUID().equals(p_27584_.getUUID())){
+            if(stack.is(CVNItems.DEPLOYER.get()) && this.getOwnerUUID().equals(p_27584_.getUUID()) && !this.getPassengers().contains(this.getOwner())){
                 ArsenalCapability arsenal = ArsenalCapability.get(p_27584_);
                 if(arsenal!=null && arsenal.rayActive){
                     if(p_27584_.level().isClientSide){
@@ -995,11 +995,6 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     @Override
     public boolean canBeAffected(MobEffectInstance p_21197_) {
         return false;
-    }
-
-    @Override
-    public void checkDespawn() {
-
     }
 
     @Override
@@ -1704,7 +1699,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
     @Nullable
     @Override
     public UUID getOwnerUUID() {
-        return this.entityData.get(OWNER_ID).orElse(null);
+        return this.entityData.get(OWNER_ID).orElse((UUID)null);
     }
     static class OwnerHurtTargetMetalGearGoal extends TargetGoal {
         private final MetalGearRayEntity tameAnimal;

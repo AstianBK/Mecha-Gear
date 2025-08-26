@@ -158,7 +158,7 @@ public class ArsenalCapability implements IArsenalPlayer {
         }
         if(isSpawn){
             if(!this.player.level().isClientSide){
-                this.player.level().explode(ray,ray.getX(),ray.getY(),ray.getZ(),30.0F, Level.ExplosionInteraction.NONE);
+                this.player.level().explode(ray,ray.getX(),ray.getY(),ray.getZ(),5.0F, Level.ExplosionInteraction.NONE);
             }
         }
     }

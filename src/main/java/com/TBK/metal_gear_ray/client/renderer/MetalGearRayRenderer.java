@@ -25,12 +25,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGearRayModel<T>> extends MobRenderer<T,M> {
     public final ResourceLocation TEXTURE = new ResourceLocation(MetalGearRayMod.MODID,"textures/entity/metal_gear_ray/ray.png");
@@ -146,11 +142,11 @@ public class MetalGearRayRenderer<T extends MetalGearRayEntity,M extends MetalGe
         float endAlpha = 1.0F;
         if (inner) {
             vertices = 4;
-            vertexconsumer = source.getBuffer(CVNRenderType.getTremorzillaBeam(BEAM_INNER_LOCATION,false));
+            vertexconsumer = source.getBuffer(CVNRenderType.getBeam(BEAM_INNER_LOCATION,false));
             speed = 0.5F;
         } else {
             vertices = 8;
-            vertexconsumer = source.getBuffer(CVNRenderType.getTremorzillaBeam(BEAM_OUTER_LOCATION,false));
+            vertexconsumer = source.getBuffer(CVNRenderType.getBeam(BEAM_OUTER_LOCATION,false));
 
             width += 0.25F;
             speed = 1F;

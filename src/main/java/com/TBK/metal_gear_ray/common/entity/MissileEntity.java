@@ -123,7 +123,7 @@ public class MissileEntity extends AbstractArrow {
 
         double vHoriz = 0.6;
 
-        int ticks = Math.max(1, (int) Math.round(horizontalDist / vHoriz));
+        int ticks = 70;
 
         double vx = dx / ticks;
         double vz = dz / ticks;
@@ -141,18 +141,9 @@ public class MissileEntity extends AbstractArrow {
         double dx = (to.x + 0.5) - (from.x + 0.5);
         double dz = (to.z + 0.5) - (from.z + 0.5);
 
-        // distancia horizontal
-        double horizontalDist = Math.sqrt(dx * dx + dz * dz);
-
-        // velocidad horizontal deseada (puedes ajustar este valor)
-        double vHoriz = 0.6;
-
-        // calcular ticks de vuelo según distancia
-        int ticks = Math.max(1, (int) Math.round(horizontalDist / vHoriz));
-
-        // calcular velocidades
-        double vx = dx / ticks;
-        double vz = dz / ticks;
+        int ticks = Math.max(1,70-tickCount);
+        double vx = dx / (ticks);
+        double vz = dz / (ticks);
 
         return new Vec3(vx, this.getDeltaMovement().y, vz);
     }
@@ -164,11 +155,8 @@ public class MissileEntity extends AbstractArrow {
         double dy = to.getY() - from.getY();
         double dz = (to.getZ() + 0.5) - (from.getZ() + 0.5);
 
-        double horizontalDist = Math.sqrt(dx * dx + dz * dz);
 
-        double vHoriz = 0.6;
-
-        int ticks = Math.max(1, (int) Math.round(horizontalDist / vHoriz));
+        int ticks = 70;
 
         double vx = dx / ticks;
         double vz = dz / ticks;
@@ -188,19 +176,14 @@ public class MissileEntity extends AbstractArrow {
         this.targetZOld = this.targetZ;
         this.distanceClientOld = this.distanceClient;
 
-        if(this.tickCount<this.maxTickAltura || this.delayTime>0){
-            if(this.getTarget()!=null){
-                Vec3 vec31 = this.getTarget().position();
-                this.targetX = vec31.x;
-                this.targetY = vec31.y;
-                this.targetZ = vec31.z;
+        if(this.getTarget()!=null){
+            Vec3 vec31 = this.getTarget().position();
+            this.targetX = vec31.x;
+            this.targetY = vec31.y;
+            this.targetZ = vec31.z;
 
-                this.distanceClient = vec31.subtract(this.position()).length();
-
-
-            }
+            this.distanceClient = vec31.subtract(this.position()).length();
         }
-
         if(this.level().isClientSide && this.getTarget()!=null && this.tickCount%6==0){
             this.level().playLocalSound(this.getTarget().blockPosition(), CVNSounds.RAY_MISSILE_LOCK.get(), SoundSource.NEUTRAL,3.0F,1.0f,false);
         }
@@ -370,7 +353,7 @@ public class MissileEntity extends AbstractArrow {
 
     @Override
     public void handleEntityEvent(byte p_19882_) {
-        if(p_19882_==4){
+        if(p_19882_==4 && target!=null){
             BlockPos start = this.blockPosition();
             BlockPos end = target.blockPosition();
             this.calculateJumpVelocity(start, end);
