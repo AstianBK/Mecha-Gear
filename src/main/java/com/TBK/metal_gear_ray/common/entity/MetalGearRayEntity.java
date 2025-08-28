@@ -34,6 +34,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
@@ -60,6 +61,7 @@ import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.*;
@@ -1622,9 +1624,21 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         PacketHandler.sendToAllTracking(new PacketMissileTarget(missile.getId(),living.getId(),i + 1),this);
     }
 
+
+
     @Override
     public void containerChanged(Container p_18983_) {
 
+    }
+
+    @Override
+    protected boolean isAffectedByFluids() {
+        return this.isInWater();
+    }
+
+    @Override
+    public void sinkInFluid(FluidType type) {
+        super.sinkInFluid(type);
     }
 
     @Override

@@ -310,6 +310,7 @@ public class MissileEntity extends AbstractArrow {
     }
 
 
+
     public void updateRot(Vec3 vec3,boolean flag){
         if (flag) {
             this.setYRot((float)(Mth.atan2(-vec3.x, -vec3.z) * (double)(180F / (float)Math.PI)));
