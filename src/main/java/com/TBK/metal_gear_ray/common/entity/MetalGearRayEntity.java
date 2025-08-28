@@ -186,7 +186,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     public static AttributeSupplier setAttributes() {
         return MetalGearRayEntity.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 200.0D)
+                .add(Attributes.MAX_HEALTH, 150.0D)
                 .add(Attributes.ARMOR,40.0D)
                 .add(Attributes.ARMOR_TOUGHNESS,10.0D)
                 .add(Attributes.FOLLOW_RANGE, 45.D)
