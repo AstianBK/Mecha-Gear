@@ -8,7 +8,9 @@ import com.TBK.metal_gear_ray.server.capability.ArsenalCapability;
 import com.TBK.metal_gear_ray.server.capability.MGCapability;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
@@ -45,6 +47,7 @@ public class Events {
         }
     }
 
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void renderHandEvent(RenderHandEvent event){
@@ -59,52 +62,24 @@ public class Events {
     }
 
     @SubscribeEvent
-    public static void onUseItem(PlayerInteractEvent.RightClickItem event) {
-        if(event.getItemStack().is(Items.STICK)){
-            if(event.getEntity().isShiftKeyDown()){
-            }else {
-                MetalGearRayMod.x-=0.1D;
+    @OnlyIn(Dist.CLIENT)
+    public static void renderPlayer(RenderLivingEvent<?,?> event){
+        if(event.getEntity() instanceof Player){
+            if(event.getEntity().isPassenger()){
+                Entity mount = event.getEntity().getVehicle();
+                if(mount instanceof IMecha){
+                    event.setCanceled(true);
+                }
             }
-            MetalGearRayMod.LOGGER.debug("X :" + MetalGearRayMod.x);
         }
-
-        if(event.getItemStack().is(Items.BLAZE_ROD)){
-            if(event.getEntity().isShiftKeyDown()){
-            }else {
-                MetalGearRayMod.y-=0.1D;
-            }
-            MetalGearRayMod.LOGGER.debug("Y :" + MetalGearRayMod.y);
-        }
-        if(event.getItemStack().is(Items.PRISMARINE_SHARD)){
-            MetalGearRayMod.y+=0.1D;
-
-            MetalGearRayMod.LOGGER.debug("Z :" + MetalGearRayMod.z);
-        }
-
-        if(event.getItemStack().is(Items.HEART_OF_THE_SEA)){
-            if(event.getEntity().isShiftKeyDown()){
-            }else {
-                MetalGearRayMod.x+=0.1D;
-            }
-            MetalGearRayMod.LOGGER.debug("XQ :" + MetalGearRayMod.xq);
-        }
-        if(event.getItemStack().is(Items.GOLD_INGOT)){
-            MetalGearRayMod.z+=0.1D;
-        }
-
-        if(event.getItemStack().is(Items.NETHERITE_INGOT)){
-            MetalGearRayMod.z-=0.1D;
-        }
-        MetalGearRayMod.LOGGER.debug("X :" + MetalGearRayMod.x + " Y :"+MetalGearRayMod.y+
-                " Z :" + MetalGearRayMod.z + " XQ :"+MetalGearRayMod.xq+
-                " YQ :" + MetalGearRayMod.yq + " ZQ :"+MetalGearRayMod.zq);
-
     }
 
     @SubscribeEvent
-    public static void onLivingHurt(LivingHurtEvent event){
-        if(event.getEntity().getVehicle() instanceof IMecha){
-            event.setCanceled(true);
+    public void onEntityHurt(LivingHurtEvent event) {
+        if (event.getSource().is(DamageTypes.IN_FIRE)
+                || event.getSource().is(DamageTypes.ON_FIRE)
+                || event.getSource().is(DamageTypes.LAVA)) {
+            event.setCanceled(true); // no recibe daño de fuego
         }
     }
 
@@ -115,6 +90,7 @@ public class Events {
             event.setCanceled(true);
         }
     }
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void onCameraSetup(ViewportEvent.ComputeCameraAngles event) {
@@ -142,6 +118,7 @@ public class Events {
             });
         });
     }
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void renderEvent(RenderLivingEvent.Pre<?,?> event){
@@ -152,6 +129,7 @@ public class Events {
             }
         }
     }
+
     @SubscribeEvent
     public static void seSalio(PlayerEvent.PlayerLoggedOutEvent event){
         if(event.getEntity().isPassenger() && event.getEntity().getVehicle() instanceof IMecha){
