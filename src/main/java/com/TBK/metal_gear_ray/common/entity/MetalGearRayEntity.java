@@ -528,7 +528,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                                 this.level().addParticle(MGParticles.BEAM_EXPLOSION.get(),end.getX()+this.random.nextInt(-2,2),end.getY()+this.random.nextInt(0,2),end.getZ()+this.random.nextInt(-2,2),0.0F,0.0F,0.0F);
                             }
                         }else {
-                            this.createExplosion(end);
+                            createExplosion(end,this);
                         }
                     }
                 }
@@ -555,7 +555,7 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                                 this.level().addParticle(MGParticles.BEAM_EXPLOSION.get(),end.getX()+this.random.nextInt(-2,2),end.getY()+this.random.nextInt(0,2),end.getZ()+this.random.nextInt(-2,2),0.0F,0.0F,0.0F);
                             }
                         }else {
-                            this.createExplosion(end);
+                            createExplosion(end,this);
                         }
                     }
 
@@ -831,9 +831,9 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         return (f6<=45.0F ||  f6>=-45.0F);
     }
 
-    public BeamExplosionEntity createExplosion(BlockPos end){
-        BeamExplosionEntity explosion = new BeamExplosionEntity(this.level(),this,null,new ExplosionDamageCalculator(),end.getX(),end.getY(),end.getZ(),4.0f,false, Explosion.BlockInteraction.DESTROY);
-        if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this.level(), explosion)) return explosion;
+    public static BeamExplosionEntity createExplosion(BlockPos end,LivingEntity entity){
+        BeamExplosionEntity explosion = new BeamExplosionEntity(entity.level(),entity,null,new ExplosionDamageCalculator(),end.getX(),end.getY(),end.getZ(),4.0f,false, Explosion.BlockInteraction.DESTROY);
+        if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(entity.level(), explosion)) return explosion;
         explosion.explode();
         explosion.finalizeExplosion(false);
         return explosion;

@@ -3,6 +3,7 @@ package com.TBK.metal_gear_ray.server.capability;
 import com.TBK.metal_gear_ray.common.api.IArsenalPlayer;
 import com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity;
 import com.TBK.metal_gear_ray.common.register.CVNEntityType;
+import com.TBK.metal_gear_ray.common.register.MGParticles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -30,6 +31,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
+
+import static com.TBK.metal_gear_ray.common.entity.MetalGearRayEntity.createExplosion;
 
 
 public class ArsenalCapability implements IArsenalPlayer {
@@ -157,8 +160,13 @@ public class ArsenalCapability implements IArsenalPlayer {
             }
         }
         if(isSpawn){
-            if(!this.player.level().isClientSide){
-                this.player.level().explode(ray,ray.getX(),ray.getY(),ray.getZ(),5.0F, Level.ExplosionInteraction.NONE);
+            Level level = this.player.level();
+            if(level.isClientSide){
+                for (int i = 0 ; i<3 ; i++){
+                    level.addParticle(MGParticles.BEAM_EXPLOSION.get(),pos.getX()+level.random.nextInt(-2,2),pos.getY()+level.random.nextInt(0,2),pos.getZ()+level.random.nextInt(-2,2),0.0F,0.0F,0.0F);
+                }
+            }else {
+                createExplosion(pos,this.player);
             }
         }
     }
