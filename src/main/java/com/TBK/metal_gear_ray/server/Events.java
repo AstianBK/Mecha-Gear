@@ -11,6 +11,8 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
@@ -78,11 +80,6 @@ public class Events {
     public static void onLivingHurt(LivingHurtEvent event){
         if(event.getEntity().getVehicle() instanceof IMecha){
             event.setCanceled(true);
-            if (event.getSource().is(DamageTypes.IN_FIRE)
-                    || event.getSource().is(DamageTypes.ON_FIRE)
-                    || event.getSource().is(DamageTypes.LAVA)) {
-                event.getEntity().clearFire();
-            }
         }
     }
 

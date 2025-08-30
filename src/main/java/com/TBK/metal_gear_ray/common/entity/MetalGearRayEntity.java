@@ -405,11 +405,19 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
                     this.level().broadcastEntityEvent(this,(byte) 12);
                 }
             }
+        }else {
+            getPassengers().forEach(e->{
+                if(e instanceof LivingEntity){
+                    e.clearFire();
+                    ((LivingEntity) e).addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE,5,99,false,false));
+                }
+            });
         }
 
         if(this.cooldownJump>0){
             this.cooldownJump--;
         }
+
 
         this.tickParts();
 
