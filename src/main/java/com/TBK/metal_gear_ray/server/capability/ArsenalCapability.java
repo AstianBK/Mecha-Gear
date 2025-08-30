@@ -163,9 +163,7 @@ public class ArsenalCapability implements IArsenalPlayer {
         if(isSpawn){
             Level level = this.player.level();
             if(level.isClientSide){
-                for (int i = 0 ; i<3 ; i++){
-                    level.addParticle(MGParticles.BEAM_EXPLOSION.get(),pos.getX()+level.random.nextInt(-2,2),pos.getY()+level.random.nextInt(0,2),pos.getZ()+level.random.nextInt(-2,2),0.0F,0.0F,0.0F);
-                }
+
             }else {
                 createExplosion(pos,this.player, Explosion.BlockInteraction.KEEP);
             }

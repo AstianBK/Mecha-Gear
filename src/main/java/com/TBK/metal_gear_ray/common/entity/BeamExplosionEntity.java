@@ -1,5 +1,6 @@
 package com.TBK.metal_gear_ray.common.entity;
 
+import com.TBK.metal_gear_ray.common.register.MGParticles;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Pair;
@@ -8,6 +9,8 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -168,6 +171,13 @@ public class BeamExplosionEntity extends Explosion {
 
             for(Pair<ItemStack, BlockPos> pair : objectarraylist) {
                 Block.popResource(this.level, pair.getSecond(), pair.getFirst());
+            }
+        }else {
+            if (this.level.isClientSide) {
+                this.level.playLocalSound(this.x, this.y, this.z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4.0F, (1.0F + (this.level.random.nextFloat() - this.level.random.nextFloat()) * 0.2F) * 0.7F, false);
+            }
+            for (int i = 0 ; i<3 ; i++){
+                level.addParticle(MGParticles.BEAM_EXPLOSION.get(),x+level.random.nextInt(-2,2),y+level.random.nextInt(0,2),z+level.random.nextInt(-2,2),0.0F,0.0F,0.0F);
             }
         }
 
