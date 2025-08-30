@@ -16,6 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -166,7 +167,7 @@ public class ArsenalCapability implements IArsenalPlayer {
                     level.addParticle(MGParticles.BEAM_EXPLOSION.get(),pos.getX()+level.random.nextInt(-2,2),pos.getY()+level.random.nextInt(0,2),pos.getZ()+level.random.nextInt(-2,2),0.0F,0.0F,0.0F);
                 }
             }else {
-                createExplosion(pos,this.player);
+                createExplosion(pos,this.player, Explosion.BlockInteraction.KEEP);
             }
         }
     }
