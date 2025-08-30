@@ -177,7 +177,7 @@ public class BeamExplosionEntity extends Explosion {
                 this.level.playLocalSound(this.x, this.y, this.z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4.0F, (1.0F + (this.level.random.nextFloat() - this.level.random.nextFloat()) * 0.2F) * 0.7F, false);
             }
             for (int i = 0 ; i<3 ; i++){
-                level.addParticle(MGParticles.BEAM_EXPLOSION.get(),x+level.random.nextInt(-2,2),y+level.random.nextInt(0,2),z+level.random.nextInt(-2,2),0.0F,0.0F,0.0F);
+                level.addParticle(MGParticles.BEAM_EXPLOSION.get(),x+level.random.nextInt(-2,2),y+level.random.nextInt(0,2),z+level.random.nextInt(-2,2),1.0F,0.0F,0.0F);
             }
         }
 

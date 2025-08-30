@@ -11,6 +11,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -160,13 +162,15 @@ public class ArsenalCapability implements IArsenalPlayer {
                 }
             }
         }
-        if(isSpawn){
-            Level level = this.player.level();
-            if(level.isClientSide){
+        Level level = this.player.level();
+        if(level.isClientSide){
+            level.playLocalSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 4.0F, (1.0F + (level.random.nextFloat() - level.random.nextFloat()) * 0.2F) * 0.7F, false);
 
-            }else {
-                createExplosion(pos,this.player, Explosion.BlockInteraction.KEEP);
+            for (int i = 0 ; i<6 ; i++){
+                level.addParticle(MGParticles.BEAM_EXPLOSION.get(),pos.getX()+level.random.nextInt(-2,2),pos.getY()+level.random.nextInt(0,2),pos.getZ()+level.random.nextInt(-2,2),0.0F,0.0F,0.0F);
             }
+        }else {
+            createExplosion(pos,this.player, Explosion.BlockInteraction.KEEP);
         }
     }
 
