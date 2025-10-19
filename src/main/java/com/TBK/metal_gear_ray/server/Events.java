@@ -117,6 +117,7 @@ public class Events {
                 newCap.copyFrom(oldCap);
             });
         });
+        oldPlayer.invalidateCaps();
     }
 
     @SubscribeEvent

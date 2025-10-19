@@ -911,13 +911,13 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
         return this.calculateViewVector(this.rotHeadX,this.rotHeadY+this.getYRot());
     }
 
-    private float lerpRotation(float currentYaw, float targetYaw, float maxTurnSpeed) {
-        float deltaYaw = Mth.wrapDegrees(targetYaw - currentYaw);
+        private float lerpRotation(float currentYaw, float targetYaw, float maxTurnSpeed) {
+            float deltaYaw = Mth.wrapDegrees(targetYaw - currentYaw);
 
-        float clampedDelta = Mth.clamp(deltaYaw, -maxTurnSpeed, maxTurnSpeed);
+            float clampedDelta = Mth.clamp(deltaYaw, -maxTurnSpeed, maxTurnSpeed);
 
-        return currentYaw + clampedDelta;
-    }
+            return currentYaw + clampedDelta;
+        }
 
     public  List<EntityHitResult> getBeamEntityHitResult(Level p_150176_, Entity p_150177_, Vec3 p_150178_, Vec3 p_150179_, AABB p_150180_, Predicate<Entity> p_150181_, float p_150182_) {
         double d0 = Double.MAX_VALUE;
@@ -1206,19 +1206,21 @@ public class MetalGearRayEntity extends PathfinderMob implements ContainerListen
 
     }
 
-    @Override
-    public float getStepHeight() {
-        return 3.0F;
-    }
+
 
     @Override
     public @Nullable PartEntity<?>[] getParts() {
         return this.parts;
     }
 
+
     @Override
     public boolean isMultipartEntity() {
         return true;
+    }
+    @Override
+    public float getStepHeight() {
+        return 3.0F;
     }
 
     public void clientTick(){

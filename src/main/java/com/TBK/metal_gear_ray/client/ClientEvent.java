@@ -24,7 +24,6 @@ public class ClientEvent {
     public static void registerLayerDefinition(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(MetalGearRayModel.LAYER_LOCATION,MetalGearRayModel::createBodyLayer);
         event.registerLayerDefinition(MissileModel.LAYER_LOCATION,MissileModel::createBodyLayer);
-
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
